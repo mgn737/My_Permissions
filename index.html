@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة الخروج والتصاريح</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="time"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .permit-group {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #3498db;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f6f3;
+            border-right: 5px solid #1abc9c;
+            border-radius: 4px;
+            display: none;
+        }
+        .result-box p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #d35400;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>حاسبة وقت الخروج (التصاريح)</h2>
+    
+    <div class="form-group">
+        <label for="startTime">بداية الشفت (متى تداوم):</label>
+        <input type="time" id="startTime" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="endTime">نهاية الشفت المعتاد:</label>
+        <input type="time" id="endTime" required>
+    </div>
+    
+    <div class="form-group">
+        <label>رصيد التصريح المراد استخدامه:</label>
+        <div class="permit-group">
+            <input type="number" id="permitHours" placeholder="ساعات (مثال: 2)" min="0">
+            <input type="number" id="permitMins" placeholder="دقائق (مثال: 30)" min="0" max="59">
+        </div>
+    </div>
+    
+    <button onclick="calculateExit()">احسب وقت الخروج</button>
+
+    <div class="result-box" id="resultBox">
+        <p>⏰ وقت تسجيل الخروج: <span class="highlight" id="exitTimeOut"></span></p>
+        <p>⏳ مدة الدوام الفعلي: <span class="highlight" id="workDurationOut"></span></p>
+    </div>
+</div>
+
+<script>
+    function calculateExit() {
+        const startInput = document.getElementById('startTime').value;
+        const endInput = document.getElementById('endTime').value;
+        const permitHours = parseInt(document.getElementById('permitHours').value) || 0;
+        const permitMins = parseInt(document.getElementById('permitMins').value) || 0;
+
+        if (!startInput || !endInput) {
+            alert("الرجاء إدخال وقت بداية ونهاية الشفت.");
+            return;
+        }
+
+        // تقسيم الساعات والدقائق
+        let [startH, startM] = startInput.split(':').map(Number);
+        let [endH, endM] = endInput.split(':').map(Number);
+
+        // إنشاء كائنات الوقت (استخدام تاريخ افتراضي)
+        let startDate = new Date(2000, 0, 1, startH, startM);
+        let endDate = new Date(2000, 0, 1, endH, endM);
+
+        // إذا كان وقت النهاية أقل من البداية (يعني الشفت يمتد لليوم التالي مثل 10م إلى 6ص)
+        if (endDate <= startDate) {
+            endDate.setDate(endDate.getDate() + 1);
+        }
+
+        // تحويل التصريح إلى ميلي ثانية وخصمه من وقت النهاية
+        let permitMs = (permitHours * 60 + permitMins) * 60000;
+        let exitDate = new Date(endDate.getTime() - permitMs);
+
+        // حساب مدة الدوام الفعلي (وقت الخروج ناقص وقت البداية)
+        let workMs = exitDate.getTime() - startDate.getTime();
+
+        if (workMs < 0) {
+            alert("رصيد التصريح المدخل أكبر من مدة الشفت نفسه!");
+            return;
+        }
+
+        // تحويل وقت الخروج إلى صيغة 12 ساعة (ص/م)
+        let exitOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
+        let formattedExitTime = exitDate.toLocaleTimeString('ar-SA', exitOptions);
+
+        // تحويل مدة العمل الفعلي إلى ساعات ودقائق
+        let workTotalMins = Math.floor(workMs / 60000);
+        let workHoursStr = Math.floor(workTotalMins / 60);
+        let workMinsStr = workTotalMins % 60;
+
+        let durationText = `${workHoursStr} ساعة`;
+        if (workMinsStr > 0) {
+            durationText += ` و ${workMinsStr} دقيقة`;
+        }
+
+        // عرض النتائج
+        document.getElementById('exitTimeOut').innerText = formattedExitTime;
+        document.getElementById('workDurationOut').innerText = durationText;
+        document.getElementById('resultBox').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>

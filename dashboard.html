@@ -54,7 +54,6 @@
         .card-stats h3 { margin: 0 0 5px 0; color: #16a085; font-size: 15px; }
         .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; }
 
-        /* زر فتح حاسبة اليومين */
         .toggle-two-days-btn {
             width: 100%;
             padding: 12px;
@@ -70,7 +69,6 @@
         }
         .toggle-two-days-btn:hover { background-color: #d35400; }
 
-        /* صندوق حاسبة يومين */
         .two-days-box {
             background-color: #fef9e7;
             border: 2px dashed #f39c12;
@@ -81,7 +79,6 @@
         }
         .two-days-box h4 { margin: 0 0 10px 0; color: #d35400; font-size: 14px; text-align: right; }
 
-        /* صندوق عرض النتائج فقط بدون خصم */
         .result-box {
             background-color: #fff;
             border: 1px solid #f39c12;
@@ -168,32 +165,27 @@
         <button class="logout-btn" onclick="logout()">خروج</button>
     </div>
 
-    <!-- رصيد الساعات والدقائق -->
     <div class="card-stats">
         <h3>رصيد التصاريح المتاحة هذا الشهر</h3>
         <span id="remainingHoursDisplay">22 ساعة</span>
     </div>
 
-    <!-- زر فتح حاسبة وقت خروج اليومين (يظهر فقط إذا كان الرصيد أقل من 16 ساعة وحتى 8 ساعات) -->
     <button id="toggleTwoDaysBtn" class="toggle-two-days-btn" onclick="toggleTwoDaysBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
 
-    <!-- صندوق حاسبة يومين (معلومات فقط بدون تطبيق أو خصم) -->
     <div id="twoDaysSection" class="two-days-box">
         <h4>⚡ حاسبة وقت الخروج (يومين):</h4>
         <div class="form-group">
             <label>تاريخ البدء:</label>
             <input type="date" id="twoDaysDateInput">
         </div>
-        <button class="action-btn btn-two-days" onclick="calculateTwoDaysInfo()">احسب وقوف ووقت الخروج</button>
+        <button class="action-btn btn-two-days" onclick="calculateTwoDaysInfo()">احسب ووقت الخروج</button>
         
-        <!-- صندوق عرض النتائج التوجيهية -->
         <div id="twoDaysResultBox" class="result-box">
             <p id="resDay1Text"></p>
             <p id="resDay2Text"></p>
         </div>
     </div>
 
-    <!-- اختيار الشفت -->
     <div class="form-group">
         <label>فترة العمل (الشفت):</label>
         <select id="shiftSelect" onchange="updateUI(); toggleCustomShift();">
@@ -205,7 +197,6 @@
         </select>
     </div>
 
-    <!-- شفت مخصص -->
     <div id="customShiftBox" style="display: none; gap: 10px; margin-bottom: 15px;">
         <div style="display: flex; gap: 10px; width: 100%;">
             <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart" onchange="updateUI()"></div>
@@ -213,13 +204,11 @@
         </div>
     </div>
 
-    <!-- تاريخ الاستئذان -->
     <div class="form-group">
         <label>تاريخ الاستئذان:</label>
         <input type="date" id="permitDateInput">
     </div>
 
-    <!-- إدخال مرن ومتناسق (يوم واحد) -->
     <div class="form-group">
         <label>إدخال الاستئذان (اختر إحدى الطريقتين):</label>
         <div style="display: flex; gap: 10px;">
@@ -263,7 +252,6 @@
 
     <button class="action-btn" onclick="addPermit()">حفظ وتطبيق التصريح</button>
 
-    <!-- جدول السجل -->
     <h3 style="margin-top: 25px; font-size: 15px; color: #2c3e50;">سجل التصاريح لهذا الشهر</h3>
     <table>
         <thead>
@@ -274,7 +262,6 @@
             </tr>
         </thead>
         <tbody id="permitsTableBody">
-            <!-- يُعبأ برمجياً -->
         </tbody>
     </table>
 </div>
@@ -367,7 +354,6 @@ function updateUI() {
     localStorage.setItem('remainingTotalMins', remainingTotalMins);
     localStorage.setItem('permitsList', JSON.stringify(permitsList));
 
-    // التحكم بظهور زر فتح الحاسبة (أقل من 16 ساعة = 960 دقيقة، وحتى 8 ساعات = 480 دقيقة)
     const toggleBtn = document.getElementById('toggleTwoDaysBtn');
     const twoDaysSection = document.getElementById('twoDaysSection');
     
@@ -465,14 +451,14 @@ function calculateTwoDaysInfo() {
         return;
     }
 
-    // اليوم الأول يستهلك كل الساعات ما عدا 8 ساعات (480 دقيقة)
+    // التصحيح: اليوم الثاني يأخذ 8 ساعات كاملة (480 دقيقة)، واليوم الأول يأخذ ما تبقى من الرصيد
     const minsDay1 = remainingTotalMins - 480;
 
     const times = getShiftTimes();
     const [startH, startM] = times.start.split(':').map(Number);
     let startTotalMins = startH * 60 + startM;
 
-    // حساب وقت الخروج لليوم الأول
+    // حساب وقت الخروج لليوم الأول بناءً على الساعات المتبقية بعد ترك 8 ساعات لليوم الثاني
     let exit1TotalMins = (startTotalMins + minsDay1) % (24 * 60);
     let ex1H = Math.floor(exit1TotalMins / 60);
     let ex1M = exit1TotalMins % 60;
@@ -486,9 +472,8 @@ function calculateTwoDaysInfo() {
     dObj2.setDate(dObj2.getDate() + 1);
     let dateStr2 = dObj2.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
 
-    // عرض المعلومات في الصندوق المخصص دون أي خصم أو تعديل على الرصيد أو السجل
     document.getElementById('resDay1Text').innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> اخرج الساعة <b>${exit1Str}</b> (تستهلك ${formatMinutesToReadable(minsDay1)}).`;
-    document.getElementById('resDay2Text').innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (تستهلك الـ 8 ساعات المتبقية).`;
+    document.getElementById('resDay2Text').innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (تستهلك الـ 8 ساعات الكاملة).`;
     document.getElementById('twoDaysResultBox').style.display = 'block';
 }
 

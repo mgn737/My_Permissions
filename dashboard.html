@@ -165,7 +165,7 @@
     <div id="customShiftBox" style="display: none; gap: 10px; margin-bottom: 15px;">
         <div style="display: flex; gap: 10px; width: 100%;">
             <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart" onchange="updateUI()"></div>
-            <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd"></div>
+            <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd" onchange="updateUI()"></div>
         </div>
     </div>
 
@@ -275,25 +275,35 @@ function formatMinutesToReadable(totalMins) {
     return `${m} دقيقة`;
 }
 
-function getShiftStartTime() {
+function getShiftTimes() {
     const shiftVal = document.getElementById('shiftSelect').value;
+    let start = "07:00";
+    let end = "15:00";
     if(shiftVal !== 'custom') {
-        return shiftVal.split('-')[0];
+        const parts = shiftVal.split('-');
+        start = parts[0];
+        end = parts[1];
     } else {
-        return document.getElementById('customStart').value || "07:00";
+        start = document.getElementById('customStart').value || "07:00";
+        end = document.getElementById('customEnd').value || "15:00";
     }
+    return { start, end };
 }
 
-// حساب أقصى وقت خروج دقيق بناءً على بداية الشفت المختار لتصفير الرصيد المتبقي تماماً
+// حساب وقت الخروج الصحيح تماماً لتصفير الرصيد المتبقي بناءً على نهاية الشفت مطروحاً منه الرصيد المتبقي
 function calculateMaxAllowedExitTime() {
-    const start = getShiftStartTime();
-    const [startH, startM] = start.split(':').map(Number);
+    const times = getShiftTimes();
+    const [endH, endM] = times.end.split(':').map(Number);
     
-    let totalStartMins = startH * 60 + startM;
-    let allowedMins = totalStartMins + remainingTotalMins;
+    let totalEndMins = endH * 60 + endM;
+    let exitMins = totalEndMins - remainingTotalMins;
     
-    let finalH = Math.floor(allowedMins / 60) % 24;
-    let finalM = allowedMins % 60;
+    if (exitMins < 0) {
+        exitMins += 24 * 60;
+    }
+    
+    let finalH = Math.floor(exitMins / 60) % 24;
+    let finalM = exitMins % 60;
     
     let period = 'ص';
     let displayH = finalH;
@@ -334,7 +344,7 @@ function updateUI() {
     if (remainingTotalMins < 480 && remainingTotalMins > 0) {
         const maxExit = calculateMaxAllowedExitTime();
         suggestionBox.style.display = 'block';
-        suggestionText.innerHTML = `⚠️ رصيدك المتبقي قليل (${formatMinutesToReadable(remainingTotalMins)}). أقصى وقت يمكنك الخروج إليه لتصفير رصيدك بناءً على شفتك هو الساعة ${maxExit}.`;
+        suggestionText.innerHTML = `⚠️ رصيدك المتبقي قليل (${formatMinutesToReadable(remainingTotalMins)}). أقصى وقت يمكنك الخروج إليه لتصفير رصيدك بالكامل بناءً على شفتك هو الساعة ${maxExit}.`;
     } else {
         suggestionBox.style.display = 'none';
     }
@@ -348,8 +358,8 @@ function addPermit() {
     let permitMins = 0;
 
     if (selHours === 0 && selMins === 0 && exitTime) {
-        const start = getShiftStartTime();
-        const [startH, startM] = start.split(':').map(Number);
+        const times = getShiftTimes();
+        const [startH, startM] = times.start.split(':').map(Number);
         const [exitH, exitM] = exitTime.split(':').map(Number);
         
         let startTotalMins = startH * 60 + startM;
@@ -375,7 +385,7 @@ function addPermit() {
 
     if (permitMins > remainingTotalMins) {
         const maxExit = calculateMaxAllowedExitTime();
-        alert(`❌ ساعات التصريح لاتكفي!\nرصيدك المتبقي فقط ${formatMinutesToReadable(remainingTotalMins)}.\n💡 اقتراح: يمكنك الخروج حتى الساعة ${maxExit} ليطابق رصيدك المتبقي بالكامل.`);
+        alert(`❌ ساعات التصريح لاتكفي!\nرصيدك المتبقي فقط ${formatMinutesToReadable(remainingTotalMins)}.\n💡 اقتراح: يمكنك الخروج حتى الساعة ${maxExit} لتأخذ رصيدك المتبقي بالكامل ويصفر.`);
         return;
     }
 

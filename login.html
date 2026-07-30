@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - إدارة التصاريح</title>
+    <title>تسجيل الدخول - نظام إدارة التصاريح</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -75,16 +75,19 @@ function login() {
     const user = document.getElementById('usernameInput').value.trim();
     const pass = document.getElementById('passwordInput').value.trim();
     
-    // قائمة المستخدمين المعتمدين مع كلمات مرورهم
+    // قائمة المستخدمين المعتمدين (فهد وأحمد)
     const usersDb = {
         "Fahad": "1606",
-        "Ahmed": "ahha2020" // يمكنك تغيير حساب الأدمن أو اسمك القديم هنا
+        "Ahmed": "1234",
+        "admin": "1234"
     };
 
     if (usersDb[user] && usersDb[user] === pass) {
         localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('currentUser', user); // حفظ اسم المستخدم الحالي لفصل بياناته
-        window.location.href = 'dashboard.html';
+        localStorage.setItem('currentUser', user); 
+        
+        // التوجيه التلقائي إلى الصفحة الرئيسية المطلوبة
+        window.location.href = 'home.html';
     } else {
         document.getElementById('errorMsg').style.display = 'block';
     }

@@ -1,302 +1,17 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - إدارة التصاريح</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        .container {
-            background-color: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 500px;
-        }
-        .header-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        h2 { color: #2c3e50; font-size: 18px; margin: 0; }
-        .back-btn, .logout-btn {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            text-decoration: none;
-        }
-        .back-btn { background-color: #2980b9; }
-        
-        .card-stats {
-            background-color: #e8f6f3;
-            border: 1px solid #1abc9c;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .card-stats h3 { margin: 0 0 5px 0; color: #16a085; font-size: 15px; }
-        .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; }
-
-        .dynamic-calc-btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #f39c12;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 15px;
-            display: none;
-        }
-        .dynamic-calc-btn:hover { background-color: #d35400; }
-
-        .calc-box {
-            background-color: #fef9e7;
-            border: 2px dashed #f39c12;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        .calc-box h4 { margin: 0 0 10px 0; color: #d35400; font-size: 14px; text-align: right; }
-
-        .result-box {
-            background-color: #fff;
-            border: 1px solid #f39c12;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 12px;
-            text-align: right;
-            display: none;
-        }
-        .result-box p { margin: 6px 0; font-size: 13px; color: #2c3e50; }
-
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; }
-        select, input {
-            width: 100%;
-            padding: 9px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-            background-color: #f0f2f5;
-            text-align: right;
-        }
-        .note-text {
-            font-size: 11px;
-            color: #7f8c8d;
-            margin-top: 4px;
-            display: block;
-            text-align: right;
-        }
-        .action-btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-        .action-btn:hover { background-color: #219653; }
-        .btn-calc { background-color: #e67e22; }
-        .btn-calc:hover { background-color: #d35400; }
-
-        table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        th { background-color: #f4f7f6; color: #2c3e50; }
-        .edit-btn {
-            background-color: #f39c12;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 4px;
-        }
-        .delete-btn {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="header-flex">
-        <a href="home.html" class="back-btn">الرئيسية</a>
-        <h2>إدارة التصاريح الشهرية</h2>
-        <button class="logout-btn" onclick="logout()">خروج</button>
-    </div>
-
-    <div class="card-stats">
-        <h3>رصيد التصاريح المتاحة هذا الشهر</h3>
-        <span id="remainingHoursDisplay">22 ساعة</span>
-    </div>
-
-    <!-- زر الحاسبة الديناميكي (يتغير بحسب الرصيد) -->
-    <button id="dynamicCalcBtn" class="dynamic-calc-btn" onclick="toggleCalcBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
-
-    <div id="calcSection" class="calc-box">
-        <h4 id="calcBoxTitle">⚡ حاسبة وقت الخروج (معلومات استكشافية):</h4>
-        
-        <div class="form-group">
-            <label>تاريخ البدء:</label>
-            <input type="date" id="calcDateInput">
-        </div>
-
-        <div class="form-group">
-            <label>فترة العمل (الشفت) للحاسبة:</label>
-            <select id="calcShiftSelect" onchange="toggleCalcCustomShift()">
-                <option value="07:00-15:00">الفترة الأولى (7 ص - 3 م)</option>
-                <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
-                <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
-                <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
-                <option value="custom">مخصص (تحديد يدوي)</option>
-            </select>
-        </div>
-
-        <div id="calcCustomShiftBox" style="display: none; margin-bottom: 15px;">
-            <div style="display: flex; gap: 10px; width: 100%;">
-                <div style="flex:1;"><label>بداية:</label><input type="time" id="calcCustomStart" value="07:00"></div>
-                <div style="flex:1;"><label>نهاية:</label><input type="time" id="calcCustomEnd" value="15:00"></div>
-            </div>
-        </div>
-
-        <button class="action-btn btn-calc" onclick="calculateInfo()">احسب وقت الخروج (معلومات)</button>
-        
-        <div id="calcResultBox" class="result-box">
-            <p id="resText1"></p>
-            <p id="resText2"></p>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>فترة العمل (الشفت):</label>
-        <select id="shiftSelect" onchange="updateUI(); toggleCustomShift();">
-            <option value="07:00-15:00">الفترة الأولى (7 ص - 3 م)</option>
-            <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
-            <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
-            <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
-            <option value="custom">مخصص (تحديد يدوي)</option>
-        </select>
-    </div>
-
-    <div id="customShiftBox" style="display: none; margin-bottom: 15px;">
-        <div style="display: flex; gap: 10px; width: 100%;">
-            <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart" onchange="updateUI()"></div>
-            <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd" onchange="updateUI()"></div>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>تاريخ الاستئذان:</label>
-        <input type="date" id="permitDateInput">
-    </div>
-
-    <div class="form-group">
-        <label>إدخال الاستئذان (اختر إحدى الطريقتين):</label>
-        <div style="display: flex; gap: 10px;">
-            <div style="flex: 1;">
-                <div style="display: flex; gap: 5px;">
-                    <select id="permitHoursSelect" style="flex: 1;">
-                        <option value="0">0 ساعة</option>
-                        <option value="1">1 ساعة</option>
-                        <option value="2">2 ساعة</option>
-                        <option value="3">3 ساعات</option>
-                        <option value="4">4 ساعات</option>
-                        <option value="5">5 ساعات</option>
-                        <option value="6">6 ساعات</option>
-                        <option value="7">7 ساعات</option>
-                        <option value="8">8 ساعات</option>
-                    </select>
-                    <select id="permitMinsSelect" style="flex: 1;">
-                        <option value="0">0 دقيقة</option>
-                        <option value="15">15 دقيقة</option>
-                        <option value="30">30 دقيقة</option>
-                        <option value="45">45 دقيقة</option>
-                        <script>
-                            let minsHtml = '';
-                            for(let i=1; i<60; i++) {
-                                if(i !== 15 && i !== 30 && i !== 45) {
-                                    minsHtml += `<option value="${i}">${i} دقيقة</option>`;
-                                }
-                            }
-                            document.write(minsHtml);
-                        </script>
-                    </select>
-                </div>
-                <span class="note-text">اختر الساعات والدقائق (بحد أقصى 8 ساعات)</span>
-            </div>
-            <div style="flex: 1;">
-                <input type="time" id="exitTimeInput">
-                <span class="note-text">وقت الخروج</span>
-            </div>
-        </div>
-    </div>
-
-    <button class="action-btn" onclick="addPermit()">حفظ وتطبيق التصريح</button>
-
-    <h3 style="margin-top: 25px; font-size: 15px; color: #2c3e50;">سجل التصاريح لهذا الشهر</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>اليوم والتاريخ</th>
-                <th>الساعات</th>
-                <th>إجراءات</th>
-            </tr>
-        </thead>
-        <tbody id="permitsTableBody">
-        </tbody>
-    </table>
-</div>
-
 <script>
 if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html';
 }
+
+// جلب اسم المستخدم الحالي لجعل بياناته مستقلة تماماً
+const currentUser = localStorage.getItem('currentUser') || 'default_user';
 
 document.getElementById('permitDateInput').valueAsDate = new Date();
 document.getElementById('calcDateInput').valueAsDate = new Date();
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
     window.location.href = 'login.html';
 }
 
@@ -318,23 +33,23 @@ function toggleCalcBox() {
 function checkMonthlyReset() {
     const now = new Date();
     const currentMonth = now.getMonth();
-    const storedMonth = localStorage.getItem('savedMonth');
+    const storedMonth = localStorage.getItem(currentUser + '_savedMonth');
 
     if (storedMonth === null || parseInt(storedMonth) !== currentMonth) {
-        localStorage.setItem('savedMonth', currentMonth);
-        localStorage.setItem('remainingTotalMins', '1320');
-        localStorage.setItem('permitsList', JSON.stringify([]));
+        localStorage.setItem(currentUser + '_savedMonth', currentMonth);
+        localStorage.setItem(currentUser + '_remainingTotalMins', '1320');
+        localStorage.setItem(currentUser + '_permitsList', JSON.stringify([]));
     }
 }
 
 checkMonthlyReset();
 
-let remainingTotalMins = parseInt(localStorage.getItem('remainingTotalMins'));
+let remainingTotalMins = parseInt(localStorage.getItem(currentUser + '_remainingTotalMins'));
 if (isNaN(remainingTotalMins) || remainingTotalMins > 1320) {
     remainingTotalMins = 1320;
 }
 
-let permitsList = JSON.parse(localStorage.getItem('permitsList')) || [];
+let permitsList = JSON.parse(localStorage.getItem(currentUser + '_permitsList')) || [];
 
 function formatMinutesToReadable(totalMins) {
     if (isNaN(totalMins) || totalMins <= 0) return "0 ساعة";
@@ -392,16 +107,13 @@ function updateUI() {
     if (isNaN(remainingTotalMins) || remainingTotalMins > 1320) remainingTotalMins = 1320;
     
     document.getElementById('remainingHoursDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
-    localStorage.setItem('remainingTotalMins', remainingTotalMins);
-    localStorage.setItem('permitsList', JSON.stringify(permitsList));
+    localStorage.setItem(currentUser + '_remainingTotalMins', remainingTotalMins);
+    localStorage.setItem(currentUser + '_permitsList', JSON.stringify(permitsList));
 
     const dynamicBtn = document.getElementById('dynamicCalcBtn');
     const calcSection = document.getElementById('calcSection');
     const calcBoxTitle = document.getElementById('calcBoxTitle');
     
-    // الشروط للزر الديناميكي:
-    // 1. إذا كان الرصيد أقل من 16 ساعة وأكبر من أو يساوي 8 ساعات -> حاسبة يومين
-    // 2. إذا كان الرصيد أقل من 8 ساعات -> حاسبة يوم واحد
     if (remainingTotalMins < 960 && remainingTotalMins >= 480) {
         dynamicBtn.style.display = 'block';
         dynamicBtn.innerText = '⚡ حاسبة توزيع التصريح على (يومين)';
@@ -505,7 +217,7 @@ function calculateInfo() {
     let endTotalMins = endH * 60 + endM;
     if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
     
-    const shiftTotalMins = endTotalMins - startTotalMins; // غالباً 8 ساعات (480 دقيقة)
+    const shiftTotalMins = endTotalMins - startTotalMins;
 
     const selectedDate = document.getElementById('calcDateInput').value;
     let dObj = selectedDate ? new Date(selectedDate) : new Date();
@@ -515,7 +227,6 @@ function calculateInfo() {
     const p1 = document.getElementById('resText1');
     const p2 = document.getElementById('resText2');
 
-    // الحالة الأولى: الرصيد بين 8 و 16 ساعة (توزيع على يومين)
     if (remainingTotalMins >= 480 && remainingTotalMins < 960) {
         const remainderAfterDay2 = remainingTotalMins - 480;
         const workMinsDay1 = shiftTotalMins - remainderAfterDay2;
@@ -538,7 +249,6 @@ function calculateInfo() {
         p2.innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (يخصم 8 ساعات كاملة).`;
         p2.style.display = 'block';
     } 
-    // الحالة الثانية: الرصيد أقل من 8 ساعات (ليوم واحد فقط)
     else if (remainingTotalMins < 480 && remainingTotalMins > 0) {
         const workMinsDay1 = shiftTotalMins - remainingTotalMins;
 
@@ -553,7 +263,7 @@ function calculateInfo() {
         let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
 
         p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b> (تستهلك رصيدك المتبقي ${formatMinutesToReadable(remainingTotalMins)}).`;
-        p2.style.display = 'none'; // لا يوجد يوم ثانٍ
+        p2.style.display = 'none';
     }
 
     resultBox.style.display = 'block';
@@ -603,6 +313,3 @@ function deletePermit(index) {
 
 updateUI();
 </script>
-
-</body>
-</html>

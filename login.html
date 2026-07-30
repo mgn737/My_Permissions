@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول</title>
+    <title>تسجيل الدخول - إدارة التصاريح</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,16 +16,16 @@
             align-items: center;
             height: 100vh;
         }
-        .container {
+        .login-card {
             background-color: #fff;
-            padding: 25px;
+            padding: 30px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 400px;
             text-align: center;
         }
-        h2 { color: #2c3e50; margin-bottom: 20px; }
+        h2 { color: #2c3e50; margin-bottom: 20px; font-size: 20px; }
         .form-group { margin-bottom: 15px; text-align: right; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
         input {
@@ -41,7 +41,7 @@
         .login-btn {
             width: 100%;
             padding: 12px;
-            background-color: #2980b9;
+            background-color: #27ae60;
             color: white;
             border: none;
             border-radius: 8px;
@@ -50,29 +50,44 @@
             cursor: pointer;
             margin-top: 10px;
         }
-        .login-btn:hover { background-color: #2471a3; }
+        .login-btn:hover { background-color: #219653; }
+        .error-msg { color: #e74c3c; font-size: 13px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>تسجيل الدخول</h2>
+<div class="login-card">
+    <h2>تسجيل الدخول لنظام التصاريح</h2>
     <div class="form-group">
         <label>اسم المستخدم:</label>
-        <input type="text" id="username" placeholder="أدخل اسم المستخدم">
+        <input type="text" id="usernameInput" placeholder="أدخل اسم المستخدم">
     </div>
     <div class="form-group">
         <label>كلمة المرور:</label>
-        <input type="password" id="password" placeholder="أدخل كلمة المرور">
+        <input type="password" id="passwordInput" placeholder="أدخل كلمة المرور">
     </div>
     <button class="login-btn" onclick="login()">دخول</button>
+    <p id="errorMsg" class="error-msg">اسم المستخدم أو كلمة المرور غير صحيحة!</p>
 </div>
 
 <script>
 function login() {
-    // يمكنك تعديل شروط التحقق حسب رغبتك، حالياً يسمح بالدخول مباشرة
-    localStorage.setItem('isLoggedIn', 'true');
-    window.location.href = 'home.html';
+    const user = document.getElementById('usernameInput').value.trim();
+    const pass = document.getElementById('passwordInput').value.trim();
+    
+    // قائمة المستخدمين المعتمدين مع كلمات مرورهم
+    const usersDb = {
+        "Fahad": "1606",
+        "admin": "1234" // يمكنك تغيير حساب الأدمن أو اسمك القديم هنا
+    };
+
+    if (usersDb[user] && usersDb[user] === pass) {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('currentUser', user); // حفظ اسم المستخدم الحالي لفصل بياناته
+        window.location.href = 'dashboard.html';
+    } else {
+        document.getElementById('errorMsg').style.display = 'block';
+    }
 }
 </script>
 

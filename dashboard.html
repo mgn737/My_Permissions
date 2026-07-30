@@ -161,7 +161,7 @@
         </select>
     </div>
 
-    <!-- شفت مخصص (مخفي افتراضياً ولا يظهر إلا عند اختيار مخصص) -->
+    <!-- شفت مخصص -->
     <div id="customShiftBox" style="display: none; gap: 10px; margin-bottom: 15px;">
         <div style="display: flex; gap: 10px; width: 100%;">
             <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart"></div>
@@ -222,7 +222,7 @@ function checkMonthlyReset() {
     const currentMonth = now.getMonth();
     const storedMonth = localStorage.getItem('savedMonth');
 
-    // 22 ساعة = 1320 دقيقة
+    // 22 ساعة = 1320 دقيقة كحد أقصى أساسي
     if (storedMonth === null || parseInt(storedMonth) !== currentMonth) {
         localStorage.setItem('savedMonth', currentMonth);
         localStorage.setItem('remainingTotalMins', '1320');
@@ -233,7 +233,7 @@ function checkMonthlyReset() {
 checkMonthlyReset();
 
 let remainingTotalMins = parseInt(localStorage.getItem('remainingTotalMins'));
-if (isNaN(remainingTotalMins)) {
+if (isNaN(remainingTotalMins) || remainingTotalMins > 1320) {
     remainingTotalMins = 1320;
 }
 
@@ -263,7 +263,7 @@ function calculateMaxAllowedExitTime() {
 }
 
 function updateUI() {
-    if (isNaN(remainingTotalMins)) remainingTotalMins = 1320;
+    if (isNaN(remainingTotalMins) || remainingTotalMins > 1320) remainingTotalMins = 1320;
     
     document.getElementById('remainingHoursDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
     localStorage.setItem('remainingTotalMins', remainingTotalMins);
@@ -386,6 +386,10 @@ function editPermit(index) {
 function deletePermit(index) {
     if (confirm('هل أنت متأكد من حذف هذا التصريح؟ سيتم إعادة الساعات إلى رصيدك.')) {
         remainingTotalMins += permitsList[index].totalMins;
+        // قصر الحد الأقصى للرصيد على 22 ساعة (1320 دقيقة) ولا يمكن تجاوزه أبداً
+        if (remainingTotalMins > 1320) {
+            remainingTotalMins = 1320;
+        }
         permitsList.splice(index, 1);
         updateUI();
     }

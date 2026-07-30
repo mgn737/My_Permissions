@@ -54,6 +54,42 @@
         .card-stats h3 { margin: 0 0 5px 0; color: #16a085; font-size: 15px; }
         .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; }
 
+        .toggle-two-days-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: none; /* مخفي افتراضياً ولا يظهر إلا إذا الرصيد أقل من 16 ساعة */
+        }
+        .toggle-two-days-btn:hover { background-color: #d35400; }
+
+        .two-days-box {
+            background-color: #fef9e7;
+            border: 2px dashed #f39c12;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .two-days-box h4 { margin: 0 0 10px 0; color: #d35400; font-size: 14px; text-align: right; }
+
+        .result-box {
+            background-color: #fff;
+            border: 1px solid #f39c12;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            text-align: right;
+            display: none;
+        }
+        .result-box p { margin: 6px 0; font-size: 13px; color: #2c3e50; }
+
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; }
         select, input {
@@ -86,6 +122,8 @@
             margin-top: 5px;
         }
         .action-btn:hover { background-color: #219653; }
+        .btn-two-days { background-color: #e67e22; }
+        .btn-two-days:hover { background-color: #d35400; }
 
         table {
             width: 100%;
@@ -130,6 +168,43 @@
     <div class="card-stats">
         <h3>رصيد التصاريح المتاحة هذا الشهر</h3>
         <span id="remainingHoursDisplay">22 ساعة</span>
+    </div>
+
+    <!-- زر حاسبة توزيع التصريح على يومين (يظهر فقط إذا كان الرصيد تحت 16 ساعة) -->
+    <button id="toggleTwoDaysBtn" class="toggle-two-days-btn" onclick="toggleTwoDaysBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
+
+    <div id="twoDaysSection" class="two-days-box">
+        <h4>⚡ حاسبة وقت الخروج (معلومات استكشافية):</h4>
+        
+        <div class="form-group">
+            <label>تاريخ البدء (اليوم الأول):</label>
+            <input type="date" id="twoDaysDateInput">
+        </div>
+
+        <div class="form-group">
+            <label>فترة العمل (الشفت) للحاسبة:</label>
+            <select id="twoDaysShiftSelect" onchange="toggleTwoDaysCustomShift()">
+                <option value="07:00-15:00">الفترة الأولى (7 ص - 3 م)</option>
+                <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
+                <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
+                <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
+                <option value="custom">مخصص (تحديد يدوي)</option>
+            </select>
+        </div>
+
+        <div id="twoDaysCustomShiftBox" style="display: none; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <div style="flex:1;"><label>بداية:</label><input type="time" id="twoDaysCustomStart" value="07:00"></div>
+                <div style="flex:1;"><label>نهاية:</label><input type="time" id="twoDaysCustomEnd" value="15:00"></div>
+            </div>
+        </div>
+
+        <button class="action-btn btn-two-days" onclick="calculateTwoDaysInfo()">احسب وقت الخروج (معلومات)</button>
+        
+        <div id="twoDaysResultBox" class="result-box">
+            <p id="resDay1Text"></p>
+            <p id="resDay2Text"></p>
+        </div>
     </div>
 
     <div class="form-group">
@@ -218,6 +293,7 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
 }
 
 document.getElementById('permitDateInput').valueAsDate = new Date();
+document.getElementById('twoDaysDateInput').valueAsDate = new Date();
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
@@ -227,6 +303,16 @@ function logout() {
 function toggleCustomShift() {
     const val = document.getElementById('shiftSelect').value;
     document.getElementById('customShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
+}
+
+function toggleTwoDaysCustomShift() {
+    const val = document.getElementById('twoDaysShiftSelect').value;
+    document.getElementById('twoDaysCustomShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
+}
+
+function toggleTwoDaysBox() {
+    const box = document.getElementById('twoDaysSection');
+    box.style.display = (box.style.display === 'block') ? 'none' : 'block';
 }
 
 function checkMonthlyReset() {
@@ -275,6 +361,21 @@ function getShiftTimes() {
     return { start, end };
 }
 
+function getTwoDaysShiftTimes() {
+    const shiftVal = document.getElementById('twoDaysShiftSelect').value;
+    let start = "07:00";
+    let end = "15:00";
+    if(shiftVal !== 'custom') {
+        const parts = shiftVal.split('-');
+        start = parts[0];
+        end = parts[1];
+    } else {
+        start = document.getElementById('twoDaysCustomStart').value || "07:00";
+        end = document.getElementById('twoDaysCustomEnd').value || "15:00";
+    }
+    return { start, end };
+}
+
 function formatTime12h(timeStr) {
     if (!timeStr) return '';
     let [h, m] = timeStr.split(':').map(Number);
@@ -293,6 +394,17 @@ function updateUI() {
     document.getElementById('remainingHoursDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
     localStorage.setItem('remainingTotalMins', remainingTotalMins);
     localStorage.setItem('permitsList', JSON.stringify(permitsList));
+
+    const toggleBtn = document.getElementById('toggleTwoDaysBtn');
+    const twoDaysSection = document.getElementById('twoDaysSection');
+    
+    // شرط ظهور الزر: إذا كان الرصيد المتاح تحت 16 ساعة (أقل من 960 دقيقة)
+    if (remainingTotalMins < 960) {
+        toggleBtn.style.display = 'block';
+    } else {
+        toggleBtn.style.display = 'none';
+        twoDaysSection.style.display = 'none';
+    }
 
     const tbody = document.getElementById('permitsTableBody');
     tbody.innerHTML = '';
@@ -373,6 +485,40 @@ function addPermit() {
     document.getElementById('exitTimeInput').value = '';
     
     updateUI();
+}
+
+function calculateTwoDaysInfo() {
+    if (remainingTotalMins <= 480) {
+        alert('الرصيد المتبقي أقل من أو يساوي 8 ساعات، لا يمكن توزيعه على يومين بالشروط المطلوبة.');
+        return;
+    }
+
+    // خصم 8 ساعات (480 دقيقة) لليوم الثاني، والباقي يذهب لليوم الأول
+    const day2Mins = 480;
+    const day1Mins = remainingTotalMins - day2Mins;
+
+    const times = getTwoDaysShiftTimes();
+    const [startH, startM] = times.start.split(':').map(Number);
+    let startTotalMins = startH * 60 + startM;
+
+    // حساب وقت الخروج في اليوم الأول بناءً على الساعات المتبقية (day1Mins)
+    let exit1TotalMins = (startTotalMins + day1Mins) % (24 * 60);
+    let ex1H = Math.floor(exit1TotalMins / 60);
+    let ex1M = exit1TotalMins % 60;
+    let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
+
+    const selectedDate = document.getElementById('twoDaysDateInput').value;
+    let dObj = selectedDate ? new Date(selectedDate) : new Date();
+    let dateStr1 = dObj.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
+    
+    let dObj2 = new Date(dObj);
+    dObj2.setDate(dObj2.getDate() + 1);
+    let dateStr2 = dObj2.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
+
+    // عرض المعلومات فقط بدون أي خصم من الرصيد أو تسجيل في الجدول
+    document.getElementById('resDay1Text').innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تستهلك ${formatMinutesToReadable(day1Mins)} ← وقت الخروج: <b>${exit1Str}</b>.`;
+    document.getElementById('resDay2Text').innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (يخصم 8 ساعات كاملة).`;
+    document.getElementById('twoDaysResultBox').style.display = 'block';
 }
 
 function editPermit(index) {

@@ -315,15 +315,15 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html';
 }
 
-// جلب اسم المستخدم الحالي (تأكد أن صفحة الدخول تخزن اسم المستخدم في localStorage تحت مفتاح loggedInUser أو ما يناسبه)
-let currentUsername = localStorage.getItem('loggedInUser') || 'defaultUser';
+// مطابقة اسم المستخدم من صفحة الدخول (currentUser)
+let currentUsername = localStorage.getItem('currentUser') || 'defaultUser';
 
 document.getElementById('permitDateInput').valueAsDate = new Date();
 document.getElementById('calcDateInput').valueAsDate = new Date();
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('loggedInUser');
+    localStorage.removeItem('currentUser');
     window.location.href = 'login.html';
 }
 
@@ -375,7 +375,7 @@ async function loadDataFromCloud() {
     }
 }
 
-// حفظ بيانات المستخدم الحالي فقط في مستند خاص به
+// حفظ بيانات المستخدم الحالي فقط في مستند خاص به في فايربيس
 async function saveDataToCloud() {
     try {
         const now = new Date();

@@ -290,17 +290,25 @@ function getShiftTimes() {
     return { start, end };
 }
 
-// حساب وقت الخروج الصحيح تماماً لتصفير الرصيد المتبقي بناءً على نهاية الشفت مطروحاً منه الرصيد المتبقي
+function formatTime12h(timeStr) {
+    if (!timeStr) return '';
+    let [h, m] = timeStr.split(':').map(Number);
+    let period = 'ص';
+    if (h >= 12) {
+        period = 'م';
+        if (h > 12) h -= 12;
+    }
+    if (h === 0) h = 12;
+    return `${h}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+// حساب أقصى وقت خروج بدقة تامة بناءً على بداية الشفت ورصيد الساعات المتبقي
 function calculateMaxAllowedExitTime() {
     const times = getShiftTimes();
-    const [endH, endM] = times.end.split(':').map(Number);
+    const [startH, startM] = times.start.split(':').map(Number);
     
-    let totalEndMins = endH * 60 + endM;
-    let exitMins = totalEndMins - remainingTotalMins;
-    
-    if (exitMins < 0) {
-        exitMins += 24 * 60;
-    }
+    let totalStartMins = startH * 60 + startM;
+    let exitMins = totalStartMins + remainingTotalMins;
     
     let finalH = Math.floor(exitMins / 60) % 24;
     let finalM = exitMins % 60;
@@ -344,7 +352,7 @@ function updateUI() {
     if (remainingTotalMins < 480 && remainingTotalMins > 0) {
         const maxExit = calculateMaxAllowedExitTime();
         suggestionBox.style.display = 'block';
-        suggestionText.innerHTML = `⚠️ رصيدك المتبقي قليل (${formatMinutesToReadable(remainingTotalMins)}). أقصى وقت يمكنك الخروج إليه لتصفير رصيدك بالكامل بناءً على شفتك هو الساعة ${maxExit}.`;
+        suggestionText.innerHTML = `⚠️ رصيدك المتبقي قليل (${formatMinutesToReadable(remainingTotalMins)}). أقصى وقت يمكنك الخروج إليه لتصفير رصيدك بناءً على شفتك هو الساعة ${maxExit}.`;
     } else {
         suggestionBox.style.display = 'none';
     }
@@ -356,6 +364,7 @@ function addPermit() {
     const exitTime = document.getElementById('exitTimeInput').value;
     
     let permitMins = 0;
+    let recordedExitTimeStr = '';
 
     if (selHours === 0 && selMins === 0 && exitTime) {
         const times = getShiftTimes();
@@ -374,8 +383,16 @@ function addPermit() {
             alert('وقت الخروج المدخل يسبق بداية الشفت!');
             return;
         }
+        recordedExitTimeStr = formatTime12h(exitTime);
     } else {
         permitMins = (selHours * 60) + selMins;
+        // حساب وقت الخروج المتوقع بناءً على الاختيار
+        const times = getShiftTimes();
+        const [startH, startM] = times.start.split(':').map(Number);
+        let calculatedExitMins = (startH * 60 + startM + permitMins) % (24 * 60);
+        let exH = Math.floor(calculatedExitMins / 60);
+        let exM = calculatedExitMins % 60;
+        recordedExitTimeStr = formatTime12h(`${String(exH).padStart(2,'0')}:${String(exM).padStart(2,'0')}`);
     }
 
     if (permitMins <= 0) {
@@ -392,8 +409,8 @@ function addPermit() {
     remainingTotalMins -= permitMins;
     
     const now = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
-    const dateStr = now.toLocaleDateString('ar-SA', options) + ' - ' + now.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+    const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
+    const dateStr = now.toLocaleDateString('ar-SA', options) + ' - ' + recordedExitTimeStr;
 
     permitsList.push({ date: dateStr, totalMins: permitMins });
     

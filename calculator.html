@@ -48,15 +48,30 @@
             font-size: 13px;
             text-align: right;
         }
-        input[type="time"], input[type="number"], select {
-            width: 100%;
-            padding: 10px;
+        /* تصغير الخانات وجعلها متناسقة على اليمين */
+        input[type="time"], select {
+            width: 50%;
+            padding: 8px;
             font-size: 14px;
             border: 1px solid #ccc;
             border-radius: 6px;
             box-sizing: border-box;
             font-family: inherit;
-            background-color: #f0f2f5; /* لون رمادي خفيف للخانات */
+            background-color: #f0f2f5;
+            text-align: right;
+            display: block;
+            margin-right: 0;
+            margin-left: auto; /* يخلي الخانة تنجرف لليمين */
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            background-color: #f0f2f5;
             text-align: right;
         }
         .permit-group {
@@ -146,6 +161,15 @@
 </div>
 
 <script>
+function format12Hour(totalMins) {
+    let hours24 = Math.floor((totalMins / 60) % 24);
+    let mins = totalMins % 60;
+    let period = hours24 >= 12 ? 'م' : 'ص';
+    let hours12 = hours24 % 12;
+    hours12 = hours12 ? hours12 : 12; // الساعة 12 بدلاً من 0
+    return `${hours12}:${String(mins).padStart(2, '0')} ${period}`;
+}
+
 function calculateExitTime() {
     const type = document.getElementById('calcType').value;
     const startTimeVal = document.getElementById('startTime').value;
@@ -178,10 +202,7 @@ function calculateExitTime() {
         const actualWorkMins = totalShiftMins - permitTotalMins;
         const exitTotalMins = startTotalMins + actualWorkMins;
 
-        const exitH = Math.floor((exitTotalMins / 60) % 24);
-        const exitM = exitTotalMins % 60;
-        const formattedExit = String(exitH).padStart(2, '0') + ':' + String(exitM).padStart(2, '0');
-
+        const formattedExit = format12Hour(exitTotalMins);
         const actH = Math.floor(actualWorkMins / 60);
         const actM = actualWorkMins % 60;
 
@@ -190,43 +211,40 @@ function calculateExitTime() {
             ساعات العمل الفعلية للدوام: <span class="highlight">${actH} ساعة و ${actM} دقيقة</span>
         `;
     } else {
-        // نظام يومين
+        // نظام يومين (تغطية اليوم الثاني بالكامل بالتصريح وباقي الساعات لليوم الأول)
         if (endTotalMins <= startTotalMins) {
             endTotalMins += 24 * 60;
         }
 
-        const totalShiftMins = endTotalMins - startTotalMins;
-        const actualWorkMins = totalShiftMins - permitTotalMins;
+        const singleShiftMins = endTotalMins - startTotalMins; // مدة الشفت الواحد (مثلاً 8 ساعات)
+        const day2CoverMins = singleShiftMins; // اليوم الثاني كامل مغطى (نفس مدة الشفت)
 
-        const day2StandardMins = 8 * 60; // 8 ساعات لليوم الثاني
-
-        if (actualWorkMins <= day2StandardMins) {
-            // إذا كان إجمالي العمل 8 ساعات أو أقل
+        if (permitTotalMins <= day2CoverMins) {
+            // إذا كان التصريح أقل من أو يساوي شفت اليوم الثاني
+            // اليوم الثاني بالكامل بصم واطلع، واليوم الأول دوام كامل
             resultText.innerHTML = `
-                اليوم الأول: <span class="highlight">ما تقدر تطلع اليوم</span><br>
-                ساعات العمل في اليوم الأول: <span class="highlight">0</span><br>
-                ساعات العمل في اليوم الثاني: <span class="highlight">${Math.floor(actualWorkMins / 60)} ساعة و ${actualWorkMins % 60} دقيقة</span><br>
-                وقت الخروج في اليوم الثاني (نهاية الدوام المعتاد): <span class="highlight">${endTimeVal}</span>
+                اليوم الأول: <span class="highlight">دوام كامل (لا يوجد خروج مبكر)</span><br>
+                ساعات العمل في اليوم الأول: <span class="highlight">${Math.floor(singleShiftMins / 60)} ساعات</span><br>
+                اليوم الثاني: <span class="highlight">بصم واطلع</span><br>
+                ساعات العمل في اليوم الثاني: <span class="highlight">لا يوجد (مغطى بالتصريح)</span>
             `;
         } else {
-            // إذا كان أكثر من 8 ساعات، اليوم الثاني ياخذ 8 ساعات كاملة والباقي لليوم الأول
-            const day1Mins = actualWorkMins - day2StandardMins;
-            const exitTotalMins = startTotalMins + day1Mins;
+            // إذا كان التصريح أكبر من شفت اليوم الثاني (يعني باقي رصيد يخصم من اليوم الأول)
+            const remainingPermitMins = permitTotalMins - day2CoverMins;
+            const day1WorkMins = singleShiftMins - remainingPermitMins;
             
-            const exitH = Math.floor((exitTotalMins / 60) % 24);
-            const exitM = exitTotalMins % 60;
-            const formattedExit = String(exitH).padStart(2, '0') + ':' + String(exitM).padStart(2, '0');
+            // وقت الخروج في اليوم الأول = بداية الشفت + ساعات العمل المتبقية في اليوم الأول
+            const exitTotalMins = startTotalMins + day1WorkMins;
+            const formattedExit = format12Hour(exitTotalMins);
 
-            const d1H = Math.floor(day1Mins / 60);
-            const d1M = day1Mins % 60;
-            const actH = Math.floor(actualWorkMins / 60);
-            const actM = actualWorkMins % 60;
+            const d1H = Math.floor(day1WorkMins / 60);
+            const d1M = day1WorkMins % 60;
 
             resultText.innerHTML = `
                 وقت الخروج في اليوم الأول: <span class="highlight">${formattedExit}</span><br>
                 ساعات العمل في اليوم الأول: <span class="highlight">${d1H} ساعة و ${d1M} دقيقة</span><br>
-                ساعات العمل في اليوم الثاني: <span class="highlight">8 ساعات كاملة</span><br>
-                إجمالي ساعات العمل الفعلي: <span class="highlight">${actH} ساعة و ${actM} دقيقة</span>
+                اليوم الثاني: <span class="highlight">بصم واطلع</span><br>
+                ساعات العمل في اليوم الثاني: <span class="highlight">لا يوجد (مغطى بالتصريح)</span>
             `;
         }
     }

@@ -172,7 +172,6 @@
 
     <button id="toggleTwoDaysBtn" class="toggle-two-days-btn" onclick="toggleTwoDaysBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
 
-    <!-- صندوق حاسبة يومين مع شفت مستقل -->
     <div id="twoDaysSection" class="two-days-box">
         <h4>⚡ حاسبة وقت الخروج (يومين):</h4>
         
@@ -492,16 +491,16 @@ function calculateTwoDaysInfo() {
         return;
     }
 
-    // اليوم الثاني يأخذ 8 ساعات كاملة (480 دقيقة)، واليوم الأول يأخذ الباقي
-    const minsDay1 = remainingTotalMins - 480;
+    // التصحيح الدقيق: خصم 8 ساعات الكاملة (480 دقيقة) حق اليوم الثاني من رصيدك الكلي، 
+    // وما يبقى هو مدة الاستئذان الفعلية لليوم الأول (مثال: 14 ساعة - 8 = 6 ساعات تبقى، إذن نستهلك 6 ساعات في اليوم الأول)
+    const day1Mins = remainingTotalMins - 480;
 
-    // استخدام شفت الحاسبة الخاص وليس الشفت العام
     const times = getTwoDaysShiftTimes();
     const [startH, startM] = times.start.split(':').map(Number);
     let startTotalMins = startH * 60 + startM;
 
-    // حساب وقت الخروج لليوم الأول من بداية شفت الحاسبة
-    let exit1TotalMins = (startTotalMins + minsDay1) % (24 * 60);
+    // حساب وقت الخروج لليوم الأول: بداية الدوام + الساعات المتبقية (day1Mins)
+    let exit1TotalMins = (startTotalMins + day1Mins) % (24 * 60);
     let ex1H = Math.floor(exit1TotalMins / 60);
     let ex1M = exit1TotalMins % 60;
     let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
@@ -514,7 +513,7 @@ function calculateTwoDaysInfo() {
     dObj2.setDate(dObj2.getDate() + 1);
     let dateStr2 = dObj2.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
 
-    document.getElementById('resDay1Text').innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> اخرج الساعة <b>${exit1Str}</b> (تستهلك ${formatMinutesToReadable(minsDay1)}).`;
+    document.getElementById('resDay1Text').innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> اخرج الساعة <b>${exit1Str}</b> (تستهلك ${formatMinutesToReadable(day1Mins)}).`;
     document.getElementById('resDay2Text').innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (تستهلك الـ 8 ساعات الكاملة).`;
     document.getElementById('twoDaysResultBox').style.display = 'block';
 }

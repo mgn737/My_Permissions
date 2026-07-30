@@ -19,7 +19,7 @@
             padding: 15px 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             display: flex;
-            justify-content: flex-start; /* يجعل الأيقونة في الزاوية العلوية اليسرى */
+            justify-content: flex-start;
         }
         .login-icon {
             text-decoration: none;
@@ -43,8 +43,8 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* يوسّط المحتوى عمودياً في منتصف الشاشة */
-            align-items: center;    /* يوسّط المحتوى أفقياً */
+            justify-content: center;
+            align-items: center;
             padding: 20px;
             text-align: center;
         }
@@ -65,20 +65,32 @@
             font-size: 18px;
             font-weight: bold;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        .nav-button.secondary {
+            background-color: #16a085;
+        }
+        .nav-button:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
 <body>
 
-    <!-- الشريط العلوي مع أيقونة تسجيل الدخول (شكل شخص) -->
+    <!-- الشريط العلوي مع أيقونة تسجيل الدخول -->
     <div class="top-bar">
-        <a href="#" class="login-icon" title="تسجيل الدخول">👤</a>
+        <a href="login.html" class="login-icon" title="تسجيل الدخول">👤</a>
     </div>
 
-    <!-- القائمة في منتصف الشاشة تماماً -->
+    <!-- القائمة في منتصف الشاشة وتحتوي الخيارين -->
     <div class="menu-container">
         <h2 class="menu-title">الخدمات الإلكترونية</h2>
-        <a href="calculator.html" class="nav-button">حاسبة وقت الخروج</a>
+        
+        <!-- الخيار الأول: إدارة التصاريح الشهرية ورصيد الـ 22 ساعة -->
+        <a href="dashboard.html" class="nav-button">إدارة التصاريح الشهرية</a>
+        
+        <!-- الخيار الثاني: الحاسبة -->
+        <a href="calculator.html" class="nav-button secondary">حاسبة وقت الخروج</a>
     </div>
 
 </body>

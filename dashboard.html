@@ -1,9 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - إدارة التصاريح</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        h2 { color: #2c3e50; margin: 0; }
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .logout-btn:hover { background-color: #c0392b; }
+        
+        .card {
+            background: #f9f9f9;
+            border: 1px solid #e1e1e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+        .row .form-group {
+            flex: 1;
+        }
+        .btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn:hover { background-color: #219653; }
+        .btn-blue {
+            background-color: #2980b9;
+            margin-top: 10px;
+        }
+        .btn-blue:hover { background-color: #2471a3; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+        th { background-color: #f2f2f2; }
+        .edit-btn { background: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .delete-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-flex">
+        <h2>لوحة التحكم - إدارة التصاريح</h2>
+        <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+    </div>
+
+    <!-- بطاقة الرصيد -->
+    <div class="card" style="text-align: center; background: #e8f8f5; border-color: #a3e4d7;">
+        <h3 style="margin: 0 0 5px 0; color: #16a085;">الرصيد المتبقي للشهر الحالي:</h3>
+        <p id="remainingHoursDisplay" style="font-size: 24px; font-weight: bold; color: #138d75; margin: 0;">--</p>
+    </div>
+
+    <!-- قسم إضافة تصريح -->
+    <div class="card">
+        <h3>إضافة تصريح جديد</h3>
+        
+        <div class="form-group">
+            <label>تاريخ التصريح:</label>
+            <input type="date" id="permitDateInput">
+        </div>
+
+        <div class="form-group">
+            <label>اختر الشفت:</label>
+            <select id="shiftSelect" onchange="toggleCustomShift()">
+                <option value="07:00-15:00">صباحي (07:00 ص - 03:00 م)</option>
+                <option value="custom">شفت مخصص...</option>
+            </select>
+        </div>
+
+        <div class="row" id="customShiftBox" style="display: none;">
+            <div class="form-group">
+                <label>بداية الشفت:</label>
+                <input type="time" id="customStart" value="07:00">
+            </div>
+            <div class="form-group">
+                <label>نهاية الشفت:</label>
+                <input type="time" id="customEnd" value="15:00">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>ساعات التصريح:</label>
+                <select id="permitHoursSelect">
+                    <option value="0">0 ساعة</option>
+                    <option value="1">1 ساعة</option>
+                    <option value="2">2 ساعات</option>
+                    <option value="3">3 ساعات</option>
+                    <option value="4">4 ساعات</option>
+                    <option value="5">5 ساعات</option>
+                    <option value="6">6 ساعات</option>
+                    <option value="7">7 ساعات</option>
+                    <option value="8">8 ساعات</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>دقائق التصريح:</label>
+                <select id="permitMinsSelect">
+                    <option value="0">0 دقيقة</option>
+                    <option value="15">15 دقيقة</option>
+                    <option value="30">30 دقيقة</option>
+                    <option value="45">45 دقيقة</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>أو حدد وقت الخروج مباشرة (اختياري بدلاً من الساعات):</label>
+            <input type="time" id="exitTimeInput">
+        </div>
+
+        <button class="btn" onclick="addPermit()">حفظ وإضافة التصريح</button>
+        <button class="btn btn-blue" id="dynamicCalcBtn" style="display: none;" onclick="toggleCalcBox()">⚡ حاسبة وقت الخروج الذكية</button>
+    </div>
+
+    <!-- قسم الحاسبة الذكية -->
+    <div class="card" id="calcSection" style="display: none; background: #fef9e7; border-color: #f9e79f;">
+        <h3 id="calcBoxTitle" style="color: #d4ac0d;">⚡ حاسبة وقت الخروج:</h3>
+        
+        <div class="form-group">
+            <label>تاريخ الخروج المستهدف:</label>
+            <input type="date" id="calcDateInput">
+        </div>
+
+        <div class="form-group">
+            <label>اختر الشفت:</label>
+            <select id="calcShiftSelect" onchange="toggleCalcCustomShift()">
+                <option value="07:00-15:00">صباحي (07:00 ص - 03:00 م)</option>
+                <option value="custom">شفت مخصص...</option>
+            </select>
+        </div>
+
+        <div class="row" id="calcCustomShiftBox" style="display: none;">
+            <div class="form-group">
+                <label>بداية الشفت:</label>
+                <input type="time" id="calcCustomStart" value="07:00">
+            </div>
+            <div class="form-group">
+                <label>نهاية الشفت:</label>
+                <input type="time" id="calcCustomEnd" value="15:00">
+            </div>
+        </div>
+
+        <button class="btn" style="background-color: #d4ac0d;" onclick="calculateInfo()">احسب وقت الخروج المطلوبة</button>
+
+        <div id="calcResultBox" style="margin-top: 15px; display: none; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #f39c12;">
+            <p id="resText1" style="margin: 5px 0; font-size: 14px;"></p>
+            <p id="resText2" style="margin: 5px 0; font-size: 14px; display: none;"></p>
+        </div>
+    </div>
+
+    <!-- جدول السجلات -->
+    <div class="card">
+        <h3>سجل التصاريح المسجلة</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>التاريخ ووقت الخروج</th>
+                    <th>المدة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="permitsTableBody">
+                <!-- تضاف البيانات هنا برمجياً -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <script>
 if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html';
 }
 
-// جلب اسم المستخدم الحالي لجعل بياناته مستقلة تماماً
 const currentUser = localStorage.getItem('currentUser') || 'default_user';
 
 document.getElementById('permitDateInput').valueAsDate = new Date();
@@ -116,7 +353,7 @@ function updateUI() {
     
     if (remainingTotalMins < 960 && remainingTotalMins >= 480) {
         dynamicBtn.style.display = 'block';
-        dynamicBtn.innerText = '⚡ حاسبة توزيع التصريح على (يومين)';
+        dynamicBtn.innerText = '⚡ حاسبة وقت الخروج (توزيع على يومين)';
         calcBoxTitle.innerText = '⚡ حاسبة وقت الخروج (توزيع على يومين):';
     } else if (remainingTotalMins < 480 && remainingTotalMins > 0) {
         dynamicBtn.style.display = 'block';
@@ -313,3 +550,6 @@ function deletePermit(index) {
 
 updateUI();
 </script>
+
+</body>
+</html>

@@ -152,7 +152,7 @@
     <!-- اختيار الشفت -->
     <div class="form-group">
         <label>فترة العمل (الشفت):</label>
-        <select id="shiftSelect" onchange="toggleCustomShift()">
+        <select id="shiftSelect" onchange="updateUI(); toggleCustomShift();">
             <option value="07:00-15:00">الفترة الأولى (7 ص - 3 م)</option>
             <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
             <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
@@ -164,7 +164,7 @@
     <!-- شفت مخصص -->
     <div id="customShiftBox" style="display: none; gap: 10px; margin-bottom: 15px;">
         <div style="display: flex; gap: 10px; width: 100%;">
-            <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart"></div>
+            <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart" onchange="updateUI()"></div>
             <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd"></div>
         </div>
     </div>
@@ -192,7 +192,6 @@
                         <option value="30">30 دقيقة</option>
                         <option value="45">45 دقيقة</option>
                         <script>
-                            // إضافة باقي الدقائق من 1 إلى 59 لاختيار دقيق
                             let minsHtml = '';
                             for(let i=1; i<60; i++) {
                                 if(i !== 15 && i !== 30 && i !== 45) {
@@ -285,7 +284,7 @@ function getShiftStartTime() {
     }
 }
 
-// حساب أقصى وقت خروج دقيق بحيث يصفر الرصيد المتبقي تماماً بناءً على بداية الشفت
+// حساب أقصى وقت خروج دقيق بناءً على بداية الشفت المختار لتصفير الرصيد المتبقي تماماً
 function calculateMaxAllowedExitTime() {
     const start = getShiftStartTime();
     const [startH, startM] = start.split(':').map(Number);
@@ -296,7 +295,6 @@ function calculateMaxAllowedExitTime() {
     let finalH = Math.floor(allowedMins / 60) % 24;
     let finalM = allowedMins % 60;
     
-    // تحويل الساعة إلى النظام بـ 12 ساعة مع تحديد ص / م بدقة
     let period = 'ص';
     let displayH = finalH;
     if (finalH >= 12) {
@@ -336,7 +334,7 @@ function updateUI() {
     if (remainingTotalMins < 480 && remainingTotalMins > 0) {
         const maxExit = calculateMaxAllowedExitTime();
         suggestionBox.style.display = 'block';
-        suggestionText.innerHTML = `⚠️ رصيدك المتبقي قليل (${formatMinutesToReadable(remainingTotalMins)}). أقصى وقت يمكنك الخروج إليه لتصفير رصيدك هو الساعة ${maxExit}.`;
+        suggestionText.innerHTML = `⚠️ رصيدك المتبقي قليل (${formatMinutesToReadable(remainingTotalMins)}). أقصى وقت يمكنك الخروج إليه لتصفير رصيدك بناءً على شفتك هو الساعة ${maxExit}.`;
     } else {
         suggestionBox.style.display = 'none';
     }

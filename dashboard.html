@@ -4,6 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم - إدارة التصاريح</title>
+    <!-- استدعاء مكتبات Firebase السحابية -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        // إعدادات فايربيس الخاصة بمشروعك
+        const firebaseConfig = {
+            apiKey: "AIzaSyD10nYcVOM_5s8Hd-...", // سيتم تعبئتها بالمفتاح الخاص بك
+            authDomain: "my---permissions.firebaseapp.com",
+            projectId: "my---permissions",
+            storageBucket: "my---permissions.firebasestorage.app",
+            messagingSenderId: "476127156640",
+            appId: "1:476127156640:web:48f68b18dba796f1a2acc5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // جعل الدوال متاحة عالمياً في الصفحة
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.updateDoc = updateDoc;
+    </script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -167,10 +193,10 @@
 
     <div class="card-stats">
         <h3>رصيد التصاريح المتاحة هذا الشهر</h3>
-        <span id="remainingHoursDisplay">22 ساعة</span>
+        <span id="remainingHoursDisplay">جاري التحميل...</span>
     </div>
 
-    <!-- زر الحاسبة الديناميكي (يتغير بحسب الرصيد) -->
+    <!-- زر الحاسبة الديناميكي -->
     <button id="dynamicCalcBtn" class="dynamic-calc-btn" onclick="toggleCalcBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
 
     <div id="calcSection" class="calc-box">
@@ -262,7 +288,7 @@
                         </script>
                     </select>
                 </div>
-                <span class="note-text">اختر الساعات والدقائق (بحد أقصى 8 ساعات)</span>
+                <span class="note-text">اختر الساعات والدقائق</span>
             </div>
             <div style="flex: 1;">
                 <input type="time" id="exitTimeInput">
@@ -315,32 +341,61 @@ function toggleCalcBox() {
     box.style.display = (box.style.display === 'block') ? 'none' : 'block';
 }
 
-function checkMonthlyReset() {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const storedMonth = localStorage.getItem('savedMonth');
+let remainingTotalMins = 1320;
+let permitsList = [];
 
-    if (storedMonth === null || parseInt(storedMonth) !== currentMonth) {
-        localStorage.setItem('savedMonth', currentMonth);
-        localStorage.setItem('remainingTotalMins', '1320');
-        localStorage.setItem('permitsList', JSON.stringify([]));
+// جلب البيانات من سحابة Firebase Firestore عند فتح الصفحة
+async function loadDataFromCloud() {
+    try {
+        const docRef = window.doc(window.db, "permitsData", "mainUser");
+        const docSnap = await window.getDoc(docRef);
+        
+        const now = new Date();
+        const currentMonth = now.getMonth();
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.savedMonth === currentMonth) {
+                remainingTotalMins = data.remainingTotalMins;
+                permitsList = data.permitsList || [];
+            } else {
+                // تصفير البيانات إذا بدأ شهر جديد
+                remainingTotalMins = 1320;
+                permitsList = [];
+                await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, permitsList });
+            }
+        } else {
+            // إنشاء المستند لأول مرة
+            remainingTotalMins = 1320;
+            permitsList = [];
+            await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, permitsList });
+        }
+        updateUI();
+    } catch (e) {
+        console.error("خطأ في جلب البيانات:", e);
     }
 }
 
-checkMonthlyReset();
-
-let remainingTotalMins = parseInt(localStorage.getItem('remainingTotalMins'));
-if (isNaN(remainingTotalMins) || remainingTotalMins > 1320) {
-    remainingTotalMins = 1320;
+// حفظ البيانات في سحابة Firebase Firestore
+async function saveDataToCloud() {
+    try {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const docRef = window.doc(window.db, "permitsData", "mainUser");
+        await window.setDoc(docRef, {
+            savedMonth: currentMonth,
+            remainingTotalMins: remainingTotalMins,
+            permitsList: permitsList
+        });
+    } catch (e) {
+        console.error("خطأ في الحفظ:", e);
+    }
 }
-
-let permitsList = JSON.parse(localStorage.getItem('permitsList')) || [];
 
 function formatMinutesToReadable(totalMins) {
     if (isNaN(totalMins) || totalMins <= 0) return "0 ساعة";
     const h = Math.floor(totalMins / 60);
     const m = totalMins % 60;
-    
     if (h > 0 && m > 0) return `${h} ساعة و ${m} دقيقة`;
     if (h > 0) return `${h} ساعة`;
     return `${m} دقيقة`;
@@ -348,12 +403,10 @@ function formatMinutesToReadable(totalMins) {
 
 function getShiftTimes() {
     const shiftVal = document.getElementById('shiftSelect').value;
-    let start = "07:00";
-    let end = "15:00";
+    let start = "07:00", end = "15:00";
     if(shiftVal !== 'custom') {
         const parts = shiftVal.split('-');
-        start = parts[0];
-        end = parts[1];
+        start = parts[0]; end = parts[1];
     } else {
         start = document.getElementById('customStart').value || "07:00";
         end = document.getElementById('customEnd').value || "15:00";
@@ -363,12 +416,10 @@ function getShiftTimes() {
 
 function getCalcShiftTimes() {
     const shiftVal = document.getElementById('calcShiftSelect').value;
-    let start = "07:00";
-    let end = "15:00";
+    let start = "07:00", end = "15:00";
     if(shiftVal !== 'custom') {
         const parts = shiftVal.split('-');
-        start = parts[0];
-        end = parts[1];
+        start = parts[0]; end = parts[1];
     } else {
         start = document.getElementById('calcCustomStart').value || "07:00";
         end = document.getElementById('calcCustomEnd').value || "15:00";
@@ -392,16 +443,11 @@ function updateUI() {
     if (isNaN(remainingTotalMins) || remainingTotalMins > 1320) remainingTotalMins = 1320;
     
     document.getElementById('remainingHoursDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
-    localStorage.setItem('remainingTotalMins', remainingTotalMins);
-    localStorage.setItem('permitsList', JSON.stringify(permitsList));
 
     const dynamicBtn = document.getElementById('dynamicCalcBtn');
     const calcSection = document.getElementById('calcSection');
     const calcBoxTitle = document.getElementById('calcBoxTitle');
     
-    // الشروط للزر الديناميكي:
-    // 1. إذا كان الرصيد أقل من 16 ساعة وأكبر من أو يساوي 8 ساعات -> حاسبة يومين
-    // 2. إذا كان الرصيد أقل من 8 ساعات -> حاسبة يوم واحد
     if (remainingTotalMins < 960 && remainingTotalMins >= 480) {
         dynamicBtn.style.display = 'block';
         dynamicBtn.innerText = '⚡ حاسبة توزيع التصريح على (يومين)';
@@ -431,7 +477,7 @@ function updateUI() {
     });
 }
 
-function addPermit() {
+window.addPermit = async function() {
     const selHours = parseInt(document.getElementById('permitHoursSelect').value) || 0;
     const selMins = parseInt(document.getElementById('permitMinsSelect').value) || 0;
     const exitTime = document.getElementById('exitTimeInput').value;
@@ -447,10 +493,7 @@ function addPermit() {
         
         let startTotalMins = startH * 60 + startM;
         let exitTotalMins = exitH * 60 + exitM;
-        
-        if (exitTotalMins < startTotalMins) {
-            exitTotalMins += 24 * 60;
-        }
+        if (exitTotalMins < startTotalMins) exitTotalMins += 24 * 60;
         
         permitMins = exitTotalMins - startTotalMins;
         if (permitMins <= 0) {
@@ -494,9 +537,10 @@ function addPermit() {
     document.getElementById('exitTimeInput').value = '';
     
     updateUI();
+    await saveDataToCloud();
 }
 
-function calculateInfo() {
+window.calculateInfo = function() {
     const times = getCalcShiftTimes();
     const [startH, startM] = times.start.split(':').map(Number);
     const [endH, endM] = times.end.split(':').map(Number);
@@ -505,7 +549,7 @@ function calculateInfo() {
     let endTotalMins = endH * 60 + endM;
     if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
     
-    const shiftTotalMins = endTotalMins - startTotalMins; // غالباً 8 ساعات (480 دقيقة)
+    const shiftTotalMins = endTotalMins - startTotalMins;
 
     const selectedDate = document.getElementById('calcDateInput').value;
     let dObj = selectedDate ? new Date(selectedDate) : new Date();
@@ -515,15 +559,9 @@ function calculateInfo() {
     const p1 = document.getElementById('resText1');
     const p2 = document.getElementById('resText2');
 
-    // الحالة الأولى: الرصيد بين 8 و 16 ساعة (توزيع على يومين)
     if (remainingTotalMins >= 480 && remainingTotalMins < 960) {
         const remainderAfterDay2 = remainingTotalMins - 480;
         const workMinsDay1 = shiftTotalMins - remainderAfterDay2;
-
-        if (workMinsDay1 <= 0) {
-            alert('القيم الناتجة غير صالحة.');
-            return;
-        }
 
         let exit1TotalMins = (startTotalMins + workMinsDay1) % (24 * 60);
         let ex1H = Math.floor(exit1TotalMins / 60);
@@ -537,71 +575,58 @@ function calculateInfo() {
         p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
         p2.innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (يخصم 8 ساعات كاملة).`;
         p2.style.display = 'block';
-    } 
-    // الحالة الثانية: الرصيد أقل من 8 ساعات (ليوم واحد فقط)
-    else if (remainingTotalMins < 480 && remainingTotalMins > 0) {
+    } else if (remainingTotalMins < 480 && remainingTotalMins > 0) {
         const workMinsDay1 = shiftTotalMins - remainingTotalMins;
-
-        if (workMinsDay1 < 0) {
-            alert('الرصيد المتبقي أكبر من ساعات الشفت.');
-            return;
-        }
 
         let exit1TotalMins = (startTotalMins + workMinsDay1) % (24 * 60);
         let ex1H = Math.floor(exit1TotalMins / 60);
         let ex1M = exit1TotalMins % 60;
         let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
 
-        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b> (تستهلك رصيدك المتبقي ${formatMinutesToReadable(remainingTotalMins)}).`;
-        p2.style.display = 'none'; // لا يوجد يوم ثانٍ
+        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
+        p2.style.display = 'none';
     }
 
     resultBox.style.display = 'block';
 }
 
-function editPermit(index) {
+window.editPermit = async function(index) {
     const oldMins = permitsList[index].totalMins;
     const oldH = Math.floor(oldMins / 60);
     const oldM = oldMins % 60;
     
-    const newHoursInput = prompt('عدل عدد ساعات التصريح (بالساعات):', oldH);
+    const newHoursInput = prompt('عدل عدد ساعات التصريح:', oldH);
     if (newHoursInput === null) return;
-    const newMinsInput = prompt('عدل عدد دقائق التصريح (بالدقائق):', oldM);
+    const newMinsInput = prompt('عدل عدد دقائق التصريح:', oldM);
     if (newMinsInput === null) return;
     
     const newH = parseInt(newHoursInput) || 0;
     const newM = parseInt(newMinsInput) || 0;
     const newTotalMins = (newH * 60) + newM;
 
-    if (newTotalMins <= 0) {
-        alert('قيمة غير صالحة');
-        return;
-    }
+    if (newTotalMins <= 0) return alert('قيمة غير صالحة');
 
     const diffMins = newTotalMins - oldMins;
-
-    if (diffMins > remainingTotalMins) {
-        alert('الرصيد المتبقي لا يكفي لهذه التعديلات!');
-        return;
-    }
+    if (diffMins > remainingTotalMins) return alert('الرصيد المتبقي لا يكفي!');
 
     remainingTotalMins -= diffMins;
     permitsList[index].totalMins = newTotalMins;
     updateUI();
+    await saveDataToCloud();
 }
 
-function deletePermit(index) {
-    if (confirm('هل أنت متأكد من حذف هذا التصريح؟ سيتم إعادة الساعات إلى رصيدك.')) {
+window.deletePermit = async function(index) {
+    if (confirm('هل أنت متأكد من حذف هذا التصريح؟')) {
         remainingTotalMins += permitsList[index].totalMins;
-        if (remainingTotalMins > 1320) {
-            remainingTotalMins = 1320;
-        }
+        if (remainingTotalMins > 1320) remainingTotalMins = 1320;
         permitsList.splice(index, 1);
         updateUI();
+        await saveDataToCloud();
     }
 }
 
-updateUI();
+// بدء تحميل البيانات فور فتح الصفحة
+loadDataFromCloud();
 </script>
 
 </body>

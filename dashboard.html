@@ -65,7 +65,7 @@
             font-weight: bold;
             cursor: pointer;
             margin-bottom: 15px;
-            display: none; /* مخفي افتراضياً ولا يظهر إلا إذا الرصيد أقل من 16 ساعة */
+            display: none;
         }
         .toggle-two-days-btn:hover { background-color: #d35400; }
 
@@ -398,7 +398,7 @@ function updateUI() {
     const toggleBtn = document.getElementById('toggleTwoDaysBtn');
     const twoDaysSection = document.getElementById('twoDaysSection');
     
-    // شرط ظهور الزر: إذا كان الرصيد المتاح تحت 16 ساعة (أقل من 960 دقيقة)
+    // يظهر فقط إذا كان الرصيد المتاح تحت 16 ساعة (أقل من 960 دقيقة)
     if (remainingTotalMins < 960) {
         toggleBtn.style.display = 'block';
     } else {
@@ -489,20 +489,34 @@ function addPermit() {
 
 function calculateTwoDaysInfo() {
     if (remainingTotalMins <= 480) {
-        alert('الرصيد المتبقي أقل من أو يساوي 8 ساعات، لا يمكن توزيعه على يومين بالشروط المطلوبة.');
+        alert('الرصيد المتبقي أقل من أو يساوي 8 ساعات.');
         return;
     }
 
-    // خصم 8 ساعات (480 دقيقة) لليوم الثاني، والباقي يذهب لليوم الأول
-    const day2Mins = 480;
-    const day1Mins = remainingTotalMins - day2Mins;
+    // 1. خصم 8 ساعات (480 دقيقة) حق اليوم الثاني من الإجمالي
+    const remainderAfterDay2 = remainingTotalMins - 480;
 
+    // 2. حساب مدة الشفت المختار بالدقائق
     const times = getTwoDaysShiftTimes();
     const [startH, startM] = times.start.split(':').map(Number);
+    const [endH, endM] = times.end.split(':').map(Number);
+    
     let startTotalMins = startH * 60 + startM;
+    let endTotalMins = endH * 60 + endM;
+    if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
+    
+    const shiftTotalMins = endTotalMins - startTotalMins; // غالباً 8 ساعات (480 دقيقة)
 
-    // حساب وقت الخروج في اليوم الأول بناءً على الساعات المتبقية (day1Mins)
-    let exit1TotalMins = (startTotalMins + day1Mins) % (24 * 60);
+    // 3. طرح الناتج من إجمالي ساعات الشفت لمعرفة ساعات الدوام في اليوم الأول
+    const workMinsDay1 = shiftTotalMins - remainderAfterDay2;
+
+    if (workMinsDay1 <= 0) {
+        alert('القيم الناتجة غير صالحة بناءً على الرصيد والشفت.');
+        return;
+    }
+
+    // وقت الخروج في اليوم الأول = بداية الشفت + ساعات الدوام الفعلية
+    let exit1TotalMins = (startTotalMins + workMinsDay1) % (24 * 60);
     let ex1H = Math.floor(exit1TotalMins / 60);
     let ex1M = exit1TotalMins % 60;
     let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
@@ -515,8 +529,8 @@ function calculateTwoDaysInfo() {
     dObj2.setDate(dObj2.getDate() + 1);
     let dateStr2 = dObj2.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
 
-    // عرض المعلومات فقط بدون أي خصم من الرصيد أو تسجيل في الجدول
-    document.getElementById('resDay1Text').innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تستهلك ${formatMinutesToReadable(day1Mins)} ← وقت الخروج: <b>${exit1Str}</b>.`;
+    // عرض المعلومات فقط (معلومات استكشافية بدون خصم رصيد)
+    document.getElementById('resDay1Text').innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
     document.getElementById('resDay2Text').innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (يخصم 8 ساعات كاملة).`;
     document.getElementById('twoDaysResultBox').style.display = 'block';
 }

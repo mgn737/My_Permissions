@@ -10,35 +10,53 @@
             background-color: #f4f7f6;
             margin: 0;
             padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .top-bar {
             background-color: #ffffff;
             padding: 15px 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            text-align: left; /* يخلي تسجيل الدخول فوق يسار */
+            display: flex;
+            justify-content: flex-start; /* يجعل الأيقونة في الزاوية العلوية اليسرى */
         }
-        .login-btn {
+        .login-icon {
             text-decoration: none;
             color: #2980b9;
-            font-size: 14px;
-            font-weight: bold;
-            border: 1px solid #2980b9;
-            padding: 5px 10px;
-            border-radius: 5px;
+            font-size: 18px;
+            width: 36px;
+            height: 36px;
+            border: 2px solid #2980b9;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+            transition: 0.2s;
+        }
+        .login-icon:hover {
+            background-color: #2980b9;
+            color: #fff;
         }
         .menu-container {
-            padding: 40px 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* يوسّط المحتوى عمودياً في منتصف الشاشة */
+            align-items: center;    /* يوسّط المحتوى أفقياً */
+            padding: 20px;
             text-align: center;
         }
         .menu-title {
             color: #2c3e50;
             margin-bottom: 30px;
+            font-size: 24px;
         }
         .nav-button {
             display: block;
             width: 100%;
             max-width: 300px;
-            margin: 0 auto 15px auto;
             padding: 15px;
             background-color: #2980b9;
             color: white;
@@ -52,16 +70,14 @@
 </head>
 <body>
 
-    <!-- الشريط العلوي لتسجيل الدخول -->
+    <!-- الشريط العلوي مع أيقونة تسجيل الدخول (شكل شخص) -->
     <div class="top-bar">
-        <a href="#" class="login-btn">تسجيل الدخول</a>
+        <a href="#" class="login-icon" title="تسجيل الدخول">👤</a>
     </div>
 
-    <!-- القائمة -->
+    <!-- القائمة في منتصف الشاشة تماماً -->
     <div class="menu-container">
         <h2 class="menu-title">الخدمات الإلكترونية</h2>
-        
-        <!-- هذا الزر يوجهنا لصفحة الحاسبة اللي غيرنا اسمها -->
         <a href="calculator.html" class="nav-button">حاسبة وقت الخروج</a>
     </div>
 

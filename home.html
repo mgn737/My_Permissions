@@ -20,6 +20,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             display: flex;
             justify-content: flex-start;
+            align-items: center;
         }
         .login-icon {
             text-decoration: none;
@@ -38,6 +39,15 @@
         .login-icon:hover {
             background-color: #2980b9;
             color: #fff;
+        }
+        .logout-small-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
         }
         .menu-container {
             flex: 1;
@@ -77,21 +87,49 @@
 </head>
 <body>
 
-    <!-- الشريط العلوي مع أيقونة تسجيل الدخول -->
-    <div class="top-bar">
-        <a href="login.html" class="login-icon" title="تسجيل الدخول">👤</a>
+    <!-- الشريط العلوي (يختلف حسب حالة تسجيل الدخول) -->
+    <div class="top-bar" id="topBar">
+        <!-- سيتم تعبئته برمجياً -->
     </div>
 
-    <!-- القائمة في منتصف الشاشة وتحتوي الخيارين -->
+    <!-- القائمة في منتصف الشاشة -->
     <div class="menu-container">
         <h2 class="menu-title">الخدمات الإلكترونية</h2>
         
-        <!-- الخيار الأول: إدارة التصاريح الشهرية ورصيد الـ 22 ساعة -->
-        <a href="dashboard.html" class="nav-button">إدارة التصاريح الشهرية</a>
-        
-        <!-- الخيار الثاني: الحاسبة -->
-        <a href="calculator.html" class="nav-button secondary">حاسبة وقت الخروج</a>
+        <div id="menuOptions">
+            <!-- سيتم تعبئته برمجياً -->
+        </div>
     </div>
+
+<script>
+function renderHome() {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const topBar = document.getElementById('topBar');
+    const menuOptions = document.getElementById('menuOptions');
+
+    if (isLoggedIn) {
+        // إذا كان مسجل دخول: تظهر أيقونة خروج فوق، ويظهر الخيارين في القائمة
+        topBar.innerHTML = `<button class="logout-small-btn" onclick="logout()">تسجيل خروج</button>`;
+        menuOptions.innerHTML = `
+            <a href="dashboard.html" class="nav-button">إدارة التصاريح الشهرية</a>
+            <a href="calculator.html" class="nav-button secondary">حاسبة وقت الخروج</a>
+        `;
+    } else {
+        // إذا لم يكن مسجل دخول: تظهر أيقونة الدخول (👤) فوق، ويظهر خيار الحاسبة البسيط فقط
+        topBar.innerHTML = `<a href="login.html" class="login-icon" title="تسجيل الدخول">👤</a>`;
+        menuOptions.innerHTML = `
+            <a href="calculator.html" class="nav-button secondary">حاسبة وقت الخروج</a>
+        `;
+    }
+}
+
+function logout() {
+    localStorage.removeItem('isLoggedIn');
+    renderHome(); // إعادة تحديث الصفحة فوراً لتتعدل الواجهة
+}
+
+renderHome();
+</script>
 
 </body>
 </html>

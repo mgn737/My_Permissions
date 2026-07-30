@@ -172,12 +172,33 @@
 
     <button id="toggleTwoDaysBtn" class="toggle-two-days-btn" onclick="toggleTwoDaysBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
 
+    <!-- صندوق حاسبة يومين مع شفت مستقل -->
     <div id="twoDaysSection" class="two-days-box">
         <h4>⚡ حاسبة وقت الخروج (يومين):</h4>
+        
         <div class="form-group">
             <label>تاريخ البدء:</label>
             <input type="date" id="twoDaysDateInput">
         </div>
+
+        <div class="form-group">
+            <label>فترة العمل (الشفت) للحاسبة:</label>
+            <select id="twoDaysShiftSelect" onchange="toggleTwoDaysCustomShift()">
+                <option value="07:00-15:00">الفترة الأولى (7 ص - 3 م)</option>
+                <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
+                <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
+                <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
+                <option value="custom">مخصص (تحديد يدوي)</option>
+            </select>
+        </div>
+
+        <div id="twoDaysCustomShiftBox" style="display: none; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <div style="flex:1;"><label>بداية:</label><input type="time" id="twoDaysCustomStart" value="07:00"></div>
+                <div style="flex:1;"><label>نهاية:</label><input type="time" id="twoDaysCustomEnd" value="15:00"></div>
+            </div>
+        </div>
+
         <button class="action-btn btn-two-days" onclick="calculateTwoDaysInfo()">احسب ووقت الخروج</button>
         
         <div id="twoDaysResultBox" class="result-box">
@@ -187,7 +208,7 @@
     </div>
 
     <div class="form-group">
-        <label>فترة العمل (الشفت):</label>
+        <label>فترة العمل (الشفت) للتسجيل العادي:</label>
         <select id="shiftSelect" onchange="updateUI(); toggleCustomShift();">
             <option value="07:00-15:00">الفترة الأولى (7 ص - 3 م)</option>
             <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
@@ -197,7 +218,7 @@
         </select>
     </div>
 
-    <div id="customShiftBox" style="display: none; gap: 10px; margin-bottom: 15px;">
+    <div id="customShiftBox" style="display: none; margin-bottom: 15px;">
         <div style="display: flex; gap: 10px; width: 100%;">
             <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart" onchange="updateUI()"></div>
             <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd" onchange="updateUI()"></div>
@@ -284,6 +305,11 @@ function toggleCustomShift() {
     document.getElementById('customShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
 }
 
+function toggleTwoDaysCustomShift() {
+    const val = document.getElementById('twoDaysShiftSelect').value;
+    document.getElementById('twoDaysCustomShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
+}
+
 function toggleTwoDaysBox() {
     const box = document.getElementById('twoDaysSection');
     box.style.display = (box.style.display === 'block') ? 'none' : 'block';
@@ -331,6 +357,21 @@ function getShiftTimes() {
     } else {
         start = document.getElementById('customStart').value || "07:00";
         end = document.getElementById('customEnd').value || "15:00";
+    }
+    return { start, end };
+}
+
+function getTwoDaysShiftTimes() {
+    const shiftVal = document.getElementById('twoDaysShiftSelect').value;
+    let start = "07:00";
+    let end = "15:00";
+    if(shiftVal !== 'custom') {
+        const parts = shiftVal.split('-');
+        start = parts[0];
+        end = parts[1];
+    } else {
+        start = document.getElementById('twoDaysCustomStart').value || "07:00";
+        end = document.getElementById('twoDaysCustomEnd').value || "15:00";
     }
     return { start, end };
 }
@@ -451,14 +492,15 @@ function calculateTwoDaysInfo() {
         return;
     }
 
-    // التصحيح: اليوم الثاني يأخذ 8 ساعات كاملة (480 دقيقة)، واليوم الأول يأخذ ما تبقى من الرصيد
+    // اليوم الثاني يأخذ 8 ساعات كاملة (480 دقيقة)، واليوم الأول يأخذ الباقي
     const minsDay1 = remainingTotalMins - 480;
 
-    const times = getShiftTimes();
+    // استخدام شفت الحاسبة الخاص وليس الشفت العام
+    const times = getTwoDaysShiftTimes();
     const [startH, startM] = times.start.split(':').map(Number);
     let startTotalMins = startH * 60 + startM;
 
-    // حساب وقت الخروج لليوم الأول بناءً على الساعات المتبقية بعد ترك 8 ساعات لليوم الثاني
+    // حساب وقت الخروج لليوم الأول من بداية شفت الحاسبة
     let exit1TotalMins = (startTotalMins + minsDay1) % (24 * 60);
     let ex1H = Math.floor(exit1TotalMins / 60);
     let ex1M = exit1TotalMins % 60;

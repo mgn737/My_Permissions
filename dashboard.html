@@ -161,10 +161,12 @@
         </select>
     </div>
 
-    <!-- شفت مخصص -->
-    <div id="customShiftBox" style="display: none; gap: 10px; display: flex; margin-bottom: 15px;">
-        <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart"></div>
-        <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd"></div>
+    <!-- شفت مخصص (مخفي افتراضياً ولا يظهر إلا عند اختيار مخصص) -->
+    <div id="customShiftBox" style="display: none; gap: 10px; margin-bottom: 15px;">
+        <div style="display: flex; gap: 10px; width: 100%;">
+            <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart"></div>
+            <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd"></div>
+        </div>
     </div>
 
     <!-- إدخال مرن ومتناسق -->
@@ -220,7 +222,7 @@ function checkMonthlyReset() {
     const currentMonth = now.getMonth();
     const storedMonth = localStorage.getItem('savedMonth');
 
-    // 22 ساعة = 22 * 60 دقيقة = 1320 دقيقة
+    // 22 ساعة = 1320 دقيقة
     if (storedMonth === null || parseInt(storedMonth) !== currentMonth) {
         localStorage.setItem('savedMonth', currentMonth);
         localStorage.setItem('remainingTotalMins', '1320');
@@ -230,12 +232,15 @@ function checkMonthlyReset() {
 
 checkMonthlyReset();
 
-let remainingTotalMins = parseInt(localStorage.getItem('remainingTotalMins')) || 1320;
+let remainingTotalMins = parseInt(localStorage.getItem('remainingTotalMins'));
+if (isNaN(remainingTotalMins)) {
+    remainingTotalMins = 1320;
+}
+
 let permitsList = JSON.parse(localStorage.getItem('permitsList')) || [];
 
-// تحويل الدقائق إلى نص واضح (ساعات ودقائق)
 function formatMinutesToReadable(totalMins) {
-    if (totalMins <= 0) return "0 ساعة";
+    if (isNaN(totalMins) || totalMins <= 0) return "0 ساعة";
     const h = Math.floor(totalMins / 60);
     const m = totalMins % 60;
     
@@ -244,7 +249,6 @@ function formatMinutesToReadable(totalMins) {
     return `${m} دقيقة`;
 }
 
-// حساب ساعة الخروج القصوى بناءً على إجمالي الدقائق المتبقية وبداية الشفت
 function calculateMaxAllowedExitTime() {
     const start = getShiftStartTime();
     const [startH, startM] = start.split(':').map(Number);
@@ -259,6 +263,8 @@ function calculateMaxAllowedExitTime() {
 }
 
 function updateUI() {
+    if (isNaN(remainingTotalMins)) remainingTotalMins = 1320;
+    
     document.getElementById('remainingHoursDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
     localStorage.setItem('remainingTotalMins', remainingTotalMins);
     localStorage.setItem('permitsList', JSON.stringify(permitsList));
@@ -281,7 +287,6 @@ function updateUI() {
     const suggestionBox = document.getElementById('suggestionBox');
     const suggestionText = document.getElementById('suggestionText');
     
-    // إذا بقي أقل من 8 ساعات (480 دقيقة)
     if (remainingTotalMins < 480 && remainingTotalMins > 0) {
         const maxExit = calculateMaxAllowedExitTime();
         suggestionBox.style.display = 'block';
@@ -306,7 +311,6 @@ function addPermit() {
     
     let permitMins = 0;
 
-    // إذا ادخل وقت الخروج، نحسب الفارق بالدقائق الحقيقية
     if (hoursInput === 0 && exitTime) {
         const start = getShiftStartTime();
         const [startH, startM] = start.split(':').map(Number);
@@ -325,7 +329,6 @@ function addPermit() {
             return;
         }
     } else if (hoursInput > 0) {
-        // تحويل عدد الساعات المدخلة إلى دقائق
         permitMins = Math.round(hoursInput * 60);
     }
 
@@ -334,7 +337,6 @@ function addPermit() {
         return;
     }
 
-    // إذا تجاوز الساعات المتاحة
     if (permitMins > remainingTotalMins) {
         const maxExit = calculateMaxAllowedExitTime();
         alert(`❌ ساعات التصريح لاتكفي!\nرصيدك المتبقي فقط ${formatMinutesToReadable(remainingTotalMins)}.\n💡 اقتراح: يمكنك الخروج حتى الساعة ${maxExit} ليطابق رصيدك المتبقي بالكامل.`);

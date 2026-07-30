@@ -52,7 +52,7 @@
             margin-bottom: 20px;
         }
         .card-stats h3 { margin: 0 0 5px 0; color: #16a085; font-size: 15px; }
-        .card-stats span { font-size: 22px; font-weight: bold; color: #2c3e50; }
+        .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; }
 
         .suggestion-box {
             background-color: #fef9e7;
@@ -117,6 +117,15 @@
             padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
+            margin-left: 4px;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -129,10 +138,10 @@
         <button class="logout-btn" onclick="logout()">خروج</button>
     </div>
 
-    <!-- رصيد الساعات -->
+    <!-- رصيد الساعات والدقائق -->
     <div class="card-stats">
         <h3>رصيد التصاريح المتاحة هذا الشهر</h3>
-        <span id="remainingHours">22</span> ساعة
+        <span id="remainingHoursDisplay">22 ساعة</span>
     </div>
 
     <!-- صندوق الاقتراح الذكي -->
@@ -158,17 +167,17 @@
         <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd"></div>
     </div>
 
-    <!-- إدخال مرن: إما عدد الساعات مباشرة أو وقت الخروج باليوم والساعة -->
+    <!-- إدخال مرن ومتناسق -->
     <div class="form-group">
         <label>إدخال الاستئذان (اختر إحدى الطريقتين):</label>
         <div style="display: flex; gap: 10px;">
             <div style="flex: 1;">
-                <input type="number" id="permitHoursInput" placeholder="عدد الساعات (مثال: 2)" min="0.5" max="22" step="0.5">
-                <span class="note-text">أدخل عدد الساعات مباشرة</span>
+                <input type="number" id="permitHoursInput" placeholder="مثال: 2" min="0" max="22" step="1">
+                <span class="note-text">أدخل عدد الساعات</span>
             </div>
             <div style="flex: 1;">
                 <input type="time" id="exitTimeInput">
-                <span class="note-text">أو وقت الخروج بالمنبه</span>
+                <span class="note-text">وقت الخروج</span>
             </div>
         </div>
     </div>
@@ -182,7 +191,7 @@
             <tr>
                 <th>اليوم والتاريخ</th>
                 <th>الساعات</th>
-                <th>تعديل</th>
+                <th>إجراءات</th>
             </tr>
         </thead>
         <tbody id="permitsTableBody">
@@ -211,21 +220,47 @@ function checkMonthlyReset() {
     const currentMonth = now.getMonth();
     const storedMonth = localStorage.getItem('savedMonth');
 
+    // 22 ساعة = 22 * 60 دقيقة = 1320 دقيقة
     if (storedMonth === null || parseInt(storedMonth) !== currentMonth) {
         localStorage.setItem('savedMonth', currentMonth);
-        localStorage.setItem('remainingHours', '22');
+        localStorage.setItem('remainingTotalMins', '1320');
         localStorage.setItem('permitsList', JSON.stringify([]));
     }
 }
 
 checkMonthlyReset();
 
-let remainingHours = parseFloat(localStorage.getItem('remainingHours')) || 22;
+let remainingTotalMins = parseInt(localStorage.getItem('remainingTotalMins')) || 1320;
 let permitsList = JSON.parse(localStorage.getItem('permitsList')) || [];
 
+// تحويل الدقائق إلى نص واضح (ساعات ودقائق)
+function formatMinutesToReadable(totalMins) {
+    if (totalMins <= 0) return "0 ساعة";
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    
+    if (h > 0 && m > 0) return `${h} ساعة و ${m} دقيقة`;
+    if (h > 0) return `${h} ساعة`;
+    return `${m} دقيقة`;
+}
+
+// حساب ساعة الخروج القصوى بناءً على إجمالي الدقائق المتبقية وبداية الشفت
+function calculateMaxAllowedExitTime() {
+    const start = getShiftStartTime();
+    const [startH, startM] = start.split(':').map(Number);
+    
+    let totalStartMins = startH * 60 + startM;
+    let allowedMins = totalStartMins + remainingTotalMins;
+    
+    let finalH = Math.floor(allowedMins / 60) % 24;
+    let finalM = allowedMins % 60;
+    
+    return String(finalH).padStart(2, '0') + ':' + String(finalM).padStart(2, '0');
+}
+
 function updateUI() {
-    document.getElementById('remainingHours').innerText = remainingHours;
-    localStorage.setItem('remainingHours', remainingHours);
+    document.getElementById('remainingHoursDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
+    localStorage.setItem('remainingTotalMins', remainingTotalMins);
     localStorage.setItem('permitsList', JSON.stringify(permitsList));
 
     const tbody = document.getElementById('permitsTableBody');
@@ -234,8 +269,11 @@ function updateUI() {
         tbody.innerHTML += `
             <tr>
                 <td>${p.date}</td>
-                <td>${p.hours} ساعات</td>
-                <td><button class="edit-btn" onclick="editPermit(${index})">✏️</button></td>
+                <td>${formatMinutesToReadable(p.totalMins)}</td>
+                <td>
+                    <button class="edit-btn" onclick="editPermit(${index})">✏️</button>
+                    <button class="delete-btn" onclick="deletePermit(${index})">🗑️</button>
+                </td>
             </tr>
         `;
     });
@@ -243,9 +281,11 @@ function updateUI() {
     const suggestionBox = document.getElementById('suggestionBox');
     const suggestionText = document.getElementById('suggestionText');
     
-    if (remainingHours < 8 && remainingHours > 0) {
+    // إذا بقي أقل من 8 ساعات (480 دقيقة)
+    if (remainingTotalMins < 480 && remainingTotalMins > 0) {
+        const maxExit = calculateMaxAllowedExitTime();
         suggestionBox.style.display = 'block';
-        suggestionText.innerHTML = `⚠️ رصيدك أقل من 8 ساعات (${remainingHours} س متبقية). يمكنك تنظيم أوقات خروجك بناءً على الرصيد المتبقي!`;
+        suggestionText.innerHTML = `⚠️ رصيدك المتبقي قليل (${formatMinutesToReadable(remainingTotalMins)}). أقصى وقت يمكنك الخروج إليه بناءً على رصيدك هو الساعة ${maxExit}.`;
     } else {
         suggestionBox.style.display = 'none';
     }
@@ -261,50 +301,54 @@ function getShiftStartTime() {
 }
 
 function addPermit() {
-    let hoursInput = parseFloat(document.getElementById('permitHoursInput').value);
+    const hoursInput = parseFloat(document.getElementById('permitHoursInput').value) || 0;
     const exitTime = document.getElementById('exitTimeInput').value;
+    
+    let permitMins = 0;
 
-    // إذا لم يدخل الساعات، ولكن أخل وقت الخروج، نقوم بحساب الفارق تلقائياً
-    if ((isNaN(hoursInput) || hoursInput <= 0) && exitTime) {
-        const start = getShiftStartTime(); // مثال "07:00"
+    // إذا ادخل وقت الخروج، نحسب الفارق بالدقائق الحقيقية
+    if (hoursInput === 0 && exitTime) {
+        const start = getShiftStartTime();
         const [startH, startM] = start.split(':').map(Number);
         const [exitH, exitM] = exitTime.split(':').map(Number);
         
         let startTotalMins = startH * 60 + startM;
         let exitTotalMins = exitH * 60 + exitM;
         
-        // معالجة الشفتات التي تمتد لمنتصف الليل
         if (exitTotalMins < startTotalMins) {
             exitTotalMins += 24 * 60;
         }
         
-        const diffMins = exitTotalMins - startTotalMins;
-        if (diffMins <= 0) {
+        permitMins = exitTotalMins - startTotalMins;
+        if (permitMins <= 0) {
             alert('وقت الخروج المدخل يسبق بداية الشفت!');
             return;
         }
-        hoursInput = parseFloat((diffMins / 60).toFixed(2));
+    } else if (hoursInput > 0) {
+        // تحويل عدد الساعات المدخلة إلى دقائق
+        permitMins = Math.round(hoursInput * 60);
     }
 
-    if (!hoursInput || hoursInput <= 0) {
+    if (permitMins <= 0) {
         alert('الرجاء إدخال عدد ساعات صحيح أو تحديد وقت خروج دقيق');
         return;
     }
-    if (hoursInput > remainingHours) {
-        alert('عذراً، ساعات التصريح تتجاوز رصيدك المتبقي لهذا الشهر!');
+
+    // إذا تجاوز الساعات المتاحة
+    if (permitMins > remainingTotalMins) {
+        const maxExit = calculateMaxAllowedExitTime();
+        alert(`❌ ساعات التصريح لاتكفي!\nرصيدك المتبقي فقط ${formatMinutesToReadable(remainingTotalMins)}.\n💡 اقتراح: يمكنك الخروج حتى الساعة ${maxExit} ليطابق رصيدك المتبقي بالكامل.`);
         return;
     }
 
-    remainingHours -= hoursInput;
+    remainingTotalMins -= permitMins;
     
-    // الحصول على التاريخ مع اسم اليوم (الأحد، الاثنين...)
     const now = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
     const dateStr = now.toLocaleDateString('ar-SA', options) + ' - ' + now.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
 
-    permitsList.push({ date: dateStr, hours: hoursInput });
+    permitsList.push({ date: dateStr, totalMins: permitMins });
     
-    // تفريغ الحقول
     document.getElementById('permitHoursInput').value = '';
     document.getElementById('exitTimeInput').value = '';
     
@@ -312,25 +356,37 @@ function addPermit() {
 }
 
 function editPermit(index) {
-    const oldHours = permitsList[index].hours;
-    const newHoursInput = prompt('عدل عدد ساعات التصريح:', oldHours);
+    const oldMins = permitsList[index].totalMins;
+    const oldHoursApprox = (oldMins / 60).toFixed(1);
+    
+    const newHoursInput = prompt('عدل عدد ساعات التصريح (بالساعات):', oldHoursApprox);
     if (newHoursInput === null) return;
     
     const newHours = parseFloat(newHoursInput);
-    if (!newHours || newHours <= 0) {
+    if (isNaN(newHours) || newHours <= 0) {
         alert('قيمة غير صالحة');
         return;
     }
 
-    const diff = newHours - oldHours;
-    if (diff > remainingHours) {
+    const newMins = Math.round(newHours * 60);
+    const diffMins = newMins - oldMins;
+
+    if (diffMins > remainingTotalMins) {
         alert('الرصيد المتبقي لا يكفي لهذه التعديلات!');
         return;
     }
 
-    remainingHours -= diff;
-    permitsList[index].hours = newHours;
+    remainingTotalMins -= diffMins;
+    permitsList[index].totalMins = newMins;
     updateUI();
+}
+
+function deletePermit(index) {
+    if (confirm('هل أنت متأكد من حذف هذا التصريح؟ سيتم إعادة الساعات إلى رصيدك.')) {
+        remainingTotalMins += permitsList[index].totalMins;
+        permitsList.splice(index, 1);
+        updateUI();
+    }
 }
 
 updateUI();

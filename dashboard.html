@@ -169,6 +169,12 @@
         </div>
     </div>
 
+    <!-- تاريخ الاستئذان -->
+    <div class="form-group">
+        <label>تاريخ الاستئذان:</label>
+        <input type="date" id="permitDateInput">
+    </div>
+
     <!-- إدخال مرن ومتناسق -->
     <div class="form-group">
         <label>إدخال الاستئذان (اختر إحدى الطريقتين):</label>
@@ -233,6 +239,9 @@
 if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html';
 }
+
+// تعيين تاريخ اليوم تلقائياً عند فتح الصفحة
+document.getElementById('permitDateInput').valueAsDate = new Date();
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
@@ -302,7 +311,6 @@ function formatTime12h(timeStr) {
     return `${h}:${String(m).padStart(2, '0')} ${period}`;
 }
 
-// حساب أقصى وقت خروج بدقة تامة بناءً على بداية الشفت ورصيد الساعات المتبقي
 function calculateMaxAllowedExitTime() {
     const times = getShiftTimes();
     const [startH, startM] = times.start.split(':').map(Number);
@@ -362,6 +370,7 @@ function addPermit() {
     const selHours = parseInt(document.getElementById('permitHoursSelect').value) || 0;
     const selMins = parseInt(document.getElementById('permitMinsSelect').value) || 0;
     const exitTime = document.getElementById('exitTimeInput').value;
+    const selectedDate = document.getElementById('permitDateInput').value;
     
     let permitMins = 0;
     let recordedExitTimeStr = '';
@@ -386,7 +395,6 @@ function addPermit() {
         recordedExitTimeStr = formatTime12h(exitTime);
     } else {
         permitMins = (selHours * 60) + selMins;
-        // حساب وقت الخروج المتوقع بناءً على الاختيار
         const times = getShiftTimes();
         const [startH, startM] = times.start.split(':').map(Number);
         let calculatedExitMins = (startH * 60 + startM + permitMins) % (24 * 60);
@@ -408,11 +416,14 @@ function addPermit() {
 
     remainingTotalMins -= permitMins;
     
-    const now = new Date();
-    const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
-    const dateStr = now.toLocaleDateString('ar-SA', options) + ' - ' + recordedExitTimeStr;
+    let dateStr = selectedDate;
+    if (selectedDate) {
+        const dObj = new Date(selectedDate);
+        dateStr = dObj.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
+    }
+    const finalRecordStr = dateStr + ' - ' + recordedExitTimeStr;
 
-    permitsList.push({ date: dateStr, totalMins: permitMins });
+    permitsList.push({ date: finalRecordStr, totalMins: permitMins });
     
     document.getElementById('permitHoursSelect').value = '0';
     document.getElementById('permitMinsSelect').value = '0';

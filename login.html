@@ -8,42 +8,26 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
         }
-        .login-card {
+        .container {
             background-color: #fff;
-            padding: 30px;
+            padding: 25px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 350px;
+            max-width: 400px;
             text-align: center;
         }
-        .logo {
-            max-width: 100px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-        }
-        h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-            text-align: right;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: bold;
-            font-size: 13px;
-        }
+        h2 { color: #2c3e50; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; text-align: right; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
         input {
             width: 100%;
             padding: 10px;
@@ -54,7 +38,7 @@
             background-color: #f0f2f5;
             text-align: right;
         }
-        button {
+        .login-btn {
             width: 100%;
             padding: 12px;
             background-color: #2980b9;
@@ -66,50 +50,29 @@
             cursor: pointer;
             margin-top: 10px;
         }
-        button:hover {
-            background-color: #1f618d;
-        }
-        .error-msg {
-            color: #e74c3c;
-            font-size: 13px;
-            margin-top: 10px;
-            display: none;
-        }
+        .login-btn:hover { background-color: #2471a3; }
     </style>
 </head>
 <body>
 
-    <div class="login-card">
-        <img src="IMG_3974.jpeg" class="logo" alt="شعار">
-        <h2>تسجيل الدخول</h2>
-        
-        <div class="form-group">
-            <label>اسم المستخدم:</label>
-            <input type="text" id="username" placeholder="أدخل اسم المستخدم">
-        </div>
-
-        <div class="form-group">
-            <label>كلمة المرور:</label>
-            <input type="password" id="password" placeholder="أدخل كلمة المرور">
-        </div>
-
-        <button onclick="handleLogin()">دخول</button>
-        <p class="error-msg" id="errorMsg">اسم المستخدم أو كلمة المرور غير صحيحة</p>
+<div class="container">
+    <h2>تسجيل الدخول</h2>
+    <div class="form-group">
+        <label>اسم المستخدم:</label>
+        <input type="text" id="username" placeholder="أدخل اسم المستخدم">
     </div>
+    <div class="form-group">
+        <label>كلمة المرور:</label>
+        <input type="password" id="password" placeholder="أدخل كلمة المرور">
+    </div>
+    <button class="login-btn" onclick="login()">دخول</button>
+</div>
 
 <script>
-function handleLogin() {
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value.trim();
-    const errorMsg = document.getElementById('errorMsg');
-
-    if (user === 'Ahmed' && pass === 'ahha2020') {
-        // حفظ حالة تسجيل الدخول في المتصفح
-        localStorage.setItem('isLoggedIn', 'true');
-        window.location.href = 'dashboard.html';
-    } else {
-        errorMsg.style.display = 'block';
-    }
+function login() {
+    // يمكنك تعديل شروط التحقق حسب رغبتك، حالياً يسمح بالدخول مباشرة
+    localStorage.setItem('isLoggedIn', 'true');
+    window.location.href = 'home.html';
 }
 </script>
 

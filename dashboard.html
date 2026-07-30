@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - إدارة التصاريح</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 { color: #2c3e50; font-size: 18px; margin: 0; }
+        .back-btn, .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+        }
+        .back-btn { background-color: #2980b9; }
+        
+        .card-stats {
+            background-color: #e8f6f3;
+            border: 1px solid #1abc9c;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .card-stats h3 { margin: 0 0 5px 0; color: #16a085; font-size: 15px; }
+        .card-stats span { font-size: 22px; font-weight: bold; color: #2c3e50; }
+
+        .suggestion-box {
+            background-color: #fef9e7;
+            border: 2px solid #f39c12;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+        .suggestion-box p { margin: 0; color: #d35400; font-weight: bold; font-size: 14px; }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; }
+        select, input {
+            width: 100%;
+            padding: 9px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #f0f2f5;
+            text-align: right;
+        }
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .action-btn:hover { background-color: #219653; }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th { background-color: #f4f7f6; color: #2c3e50; }
+        .edit-btn {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-flex">
+        <a href="home.html" class="back-btn">الرئيسية</a>
+        <h2>إدارة التصاريح الشهرية</h2>
+        <button class="logout-btn" onclick="logout()">خروج</button>
+    </div>
+
+    <!-- عرض رصيد الساعات -->
+    <div class="card-stats">
+        <h3>رصيد التصاريح المتاحة هذا الشهر</h3>
+        <span id="remainingHours">22</span> ساعة
+    </div>
+
+    <!-- صندوق الاقتراح الذكي إذا تبقى أقل من 8 ساعات -->
+    <div class="suggestion-box" id="suggestionBox">
+        <p id="suggestionText"></p>
+    </div>
+
+    <!-- اختيار الشفت -->
+    <div class="form-group">
+        <label>فترة العمل (الشفت):</label>
+        <select id="shiftSelect" onchange="toggleCustomShift()">
+            <option value="07:00-15:00">الفترة الأولى (7 ص - 3 م)</option>
+            <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
+            <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
+            <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
+            <option value="custom">مخصص (تحديد يدوي)</option>
+        </select>
+    </div>
+
+    <!-- شفت مخصص -->
+    <div id="customShiftBox" style="display: none; gap: 10px; display: flex; margin-bottom: 15px;">
+        <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart"></div>
+        <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd"></div>
+    </div>
+
+    <!-- تسجيل وقت الخروج / استئذان -->
+    <div class="form-group">
+        <label>عدد ساعات الاستئذان (التصريح):</label>
+        <input type="number" id="permitInput" placeholder="مثال: ساعتين (2)" min="1" max="22">
+    </div>
+
+    <button class="action-btn" onclick="addPermit()">حفظ وتطبيق التصريح</button>
+
+    <!-- جدول السجل -->
+    <h3 style="margin-top: 25px; font-size: 15px; color: #2c3e50;">سجل التصاريح لشذا الشهر</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>اليوم / التاريخ</th>
+                <th>الساعات</th>
+                <th>تعديل</th>
+            </tr>
+        </thead>
+        <tbody id="permitsTableBody">
+            <!-- يُعبأ تلقائياً برمجياً -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+// التحقق من تسجيل الدخول
+if (localStorage.getItem('isLoggedIn') !== 'true') {
+    window.location.href = 'login.html';
+}
+
+function logout() {
+    localStorage.removeItem('isLoggedIn');
+    window.location.href = 'login.html';
+}
+
+function toggleCustomShift() {
+    const val = document.getElementById('shiftSelect').value;
+    document.getElementById('customShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
+}
+
+// التحقق من تدوير الشهر وتجديد الـ 22 ساعة تلقائياً
+function checkMonthlyReset() {
+    const now = new Date();
+    const currentMonth = now.getMonth(); // الشهر الحالي (0-11)
+    const storedMonth = localStorage.getItem('savedMonth');
+
+    if (storedMonth === null || parseInt(storedMonth) !== currentMonth) {
+        // تجديد تلقائي بداية كل شهر ميلادي جديد
+        localStorage.setItem('savedMonth', currentMonth);
+        localStorage.setItem('remainingHours', '22');
+        localStorage.setItem('permitsList', JSON.stringify([]));
+    }
+}
+
+checkMonthlyReset();
+
+let remainingHours = parseFloat(localStorage.getItem('remainingHours')) || 22;
+let permitsList = JSON.parse(localStorage.getItem('permitsList')) || [];
+
+function updateUI() {
+    document.getElementById('remainingHours').innerText = remainingHours;
+    localStorage.setItem('remainingHours', remainingHours);
+    localStorage.setItem('permitsList', JSON.stringify(permitsList));
+
+    // تحديث الجدول
+    const tbody = document.getElementById('permitsTableBody');
+    tbody.innerHTML = '';
+    permitsList.forEach((p, index) => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${p.date}</td>
+                <td>${p.hours} ساعات</td>
+                <td><button class="edit-btn" onclick="editPermit(${index})">✏️</button></td>
+            </tr>
+        `;
+    });
+
+    // الفحص الذكي إذا تبقى أقل من 8 ساعات
+    const suggestionBox = document.getElementById('suggestionBox');
+    const suggestionText = document.getElementById('suggestionText');
+    
+    if (remainingHours < 8 && remainingHours > 0) {
+        // حساب وقت الخروج المقترح بناء على الشفت الحالي
+        let shiftStart = "22:00"; // افتراضي
+        const shiftVal = document.getElementById('shiftSelect').value;
+        if(shiftVal !== 'custom') {
+            shiftStart = shiftVal.split('-')[0];
+        } else {
+            shiftStart = document.getElementById('customStart').value || "22:00";
+        }
+        
+        suggestionBox.style.display = 'block';
+        suggestionText.innerHTML = `⚠️ رصيدك أقل من 8 ساعات (${remainingHours} س متبقية). يمكنك الخروج اليوم الساعة المقترحة بناءً على رصيدك المتبقي!`;
+    } else {
+        suggestionBox.style.display = 'none';
+    }
+}
+
+function addPermit() {
+    const hours = parseFloat(document.getElementById('permitInput').value);
+    if (!hours || hours <= 0) {
+        alert('الرجاء إدخال عدد ساعات صحيح');
+        return;
+    }
+    if (hours > remainingHours) {
+        alert('عذراً، ساعات التصريح تتجاوز رصيدك المتبقي لهذا الشهر!');
+        return;
+    }
+
+    remainingHours -= hours;
+    
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ar-SA') + ' - ' + now.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+
+    permitsList.push({ date: dateStr, hours: hours });
+    document.getElementById('permitInput').value = '';
+    updateUI();
+}
+
+function editPermit(index) {
+    const oldHours = permitsList[index].hours;
+    const newHoursInput = prompt('عدل عدد ساعات التصريح:', oldHours);
+    if (newHoursInput === null) return;
+    
+    const newHours = parseFloat(newHoursInput);
+    if (!newHours || newHours <= 0) {
+        alert('قيمة غير صالحة');
+        return;
+    }
+
+    // تعديل الرصيد بناءً على الفرق
+    const diff = newHours - oldHours;
+    if (diff > remainingHours) {
+        alert('الرصيد المتبقي لا يكفي لهذه التعديلات!');
+        return;
+    }
+
+    remainingHours -= diff;
+    permitsList[index].hours = newHours;
+    updateUI();
+}
+
+updateUI();
+</script>
+
+</body>
+</html>

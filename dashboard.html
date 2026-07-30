@@ -9,9 +9,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // إعدادات فايربيس الخاصة بمشروعك
         const firebaseConfig = {
-            apiKey: "AIzaSyD10nYcVOM_5s8Hd-...", // سيتم تعبئتها بالمفتاح الخاص بك
+            apiKey: "AIzaSyD10nYcVOM_5s8Hd-...",
             authDomain: "my---permissions.firebaseapp.com",
             projectId: "my---permissions",
             storageBucket: "my---permissions.firebasestorage.app",
@@ -22,7 +21,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // جعل الدوال متاحة عالمياً في الصفحة
         window.db = db;
         window.doc = doc;
         window.getDoc = getDoc;
@@ -187,7 +185,7 @@
 <div class="container">
     <div class="header-flex">
         <a href="home.html" class="back-btn">الرئيسية</a>
-        <h2>إدارة التصاريح الشهرية</h2>
+        <h2 id="pageTitle">إدارة التصاريح الشهرية</h2>
         <button class="logout-btn" onclick="logout()">خروج</button>
     </div>
 
@@ -196,7 +194,6 @@
         <span id="remainingHoursDisplay">جاري التحميل...</span>
     </div>
 
-    <!-- زر الحاسبة الديناميكي -->
     <button id="dynamicCalcBtn" class="dynamic-calc-btn" onclick="toggleCalcBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
 
     <div id="calcSection" class="calc-box">
@@ -318,11 +315,15 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html';
 }
 
+// جلب اسم المستخدم الحالي (تأكد أن صفحة الدخول تخزن اسم المستخدم في localStorage تحت مفتاح loggedInUser أو ما يناسبه)
+let currentUsername = localStorage.getItem('loggedInUser') || 'defaultUser';
+
 document.getElementById('permitDateInput').valueAsDate = new Date();
 document.getElementById('calcDateInput').valueAsDate = new Date();
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('loggedInUser');
     window.location.href = 'login.html';
 }
 
@@ -344,10 +345,10 @@ function toggleCalcBox() {
 let remainingTotalMins = 1320;
 let permitsList = [];
 
-// جلب البيانات من سحابة Firebase Firestore عند فتح الصفحة
+// جلب بيانات المستخدم المستقلة من فايربيس باستخدام اسم المستخدم كمعرّف للمستند
 async function loadDataFromCloud() {
     try {
-        const docRef = window.doc(window.db, "permitsData", "mainUser");
+        const docRef = window.doc(window.db, "permitsData", currentUsername);
         const docSnap = await window.getDoc(docRef);
         
         const now = new Date();
@@ -359,13 +360,11 @@ async function loadDataFromCloud() {
                 remainingTotalMins = data.remainingTotalMins;
                 permitsList = data.permitsList || [];
             } else {
-                // تصفير البيانات إذا بدأ شهر جديد
                 remainingTotalMins = 1320;
                 permitsList = [];
                 await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, permitsList });
             }
         } else {
-            // إنشاء المستند لأول مرة
             remainingTotalMins = 1320;
             permitsList = [];
             await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, permitsList });
@@ -376,12 +375,12 @@ async function loadDataFromCloud() {
     }
 }
 
-// حفظ البيانات في سحابة Firebase Firestore
+// حفظ بيانات المستخدم الحالي فقط في مستند خاص به
 async function saveDataToCloud() {
     try {
         const now = new Date();
         const currentMonth = now.getMonth();
-        const docRef = window.doc(window.db, "permitsData", "mainUser");
+        const docRef = window.doc(window.db, "permitsData", currentUsername);
         await window.setDoc(docRef, {
             savedMonth: currentMonth,
             remainingTotalMins: remainingTotalMins,
@@ -625,7 +624,6 @@ window.deletePermit = async function(index) {
     }
 }
 
-// بدء تحميل البيانات فور فتح الصفحة
 loadDataFromCloud();
 </script>
 

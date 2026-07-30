@@ -77,6 +77,13 @@
             background-color: #f0f2f5;
             text-align: right;
         }
+        .note-text {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-top: 4px;
+            display: block;
+            text-align: right;
+        }
         .action-btn {
             width: 100%;
             padding: 12px;
@@ -95,7 +102,7 @@
             width: 100%;
             margin-top: 20px;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 12px;
         }
         th, td {
             border: 1px solid #ddd;
@@ -122,13 +129,13 @@
         <button class="logout-btn" onclick="logout()">خروج</button>
     </div>
 
-    <!-- عرض رصيد الساعات -->
+    <!-- رصيد الساعات -->
     <div class="card-stats">
         <h3>رصيد التصاريح المتاحة هذا الشهر</h3>
         <span id="remainingHours">22</span> ساعة
     </div>
 
-    <!-- صندوق الاقتراح الذكي إذا تبقى أقل من 8 ساعات -->
+    <!-- صندوق الاقتراح الذكي -->
     <div class="suggestion-box" id="suggestionBox">
         <p id="suggestionText"></p>
     </div>
@@ -151,32 +158,40 @@
         <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd"></div>
     </div>
 
-    <!-- تسجيل وقت الخروج / استئذان -->
+    <!-- إدخال مرن: إما عدد الساعات مباشرة أو وقت الخروج باليوم والساعة -->
     <div class="form-group">
-        <label>عدد ساعات الاستئذان (التصريح):</label>
-        <input type="number" id="permitInput" placeholder="مثال: ساعتين (2)" min="1" max="22">
+        <label>إدخال الاستئذان (اختر إحدى الطريقتين):</label>
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <input type="number" id="permitHoursInput" placeholder="عدد الساعات (مثال: 2)" min="0.5" max="22" step="0.5">
+                <span class="note-text">أدخل عدد الساعات مباشرة</span>
+            </div>
+            <div style="flex: 1;">
+                <input type="time" id="exitTimeInput">
+                <span class="note-text">أو وقت الخروج بالمنبه</span>
+            </div>
+        </div>
     </div>
 
     <button class="action-btn" onclick="addPermit()">حفظ وتطبيق التصريح</button>
 
     <!-- جدول السجل -->
-    <h3 style="margin-top: 25px; font-size: 15px; color: #2c3e50;">سجل التصاريح لشذا الشهر</h3>
+    <h3 style="margin-top: 25px; font-size: 15px; color: #2c3e50;">سجل التصاريح لهذا الشهر</h3>
     <table>
         <thead>
             <tr>
-                <th>اليوم / التاريخ</th>
+                <th>اليوم والتاريخ</th>
                 <th>الساعات</th>
                 <th>تعديل</th>
             </tr>
         </thead>
         <tbody id="permitsTableBody">
-            <!-- يُعبأ تلقائياً برمجياً -->
+            <!-- يُعبأ برمجياً -->
         </tbody>
     </table>
 </div>
 
 <script>
-// التحقق من تسجيل الدخول
 if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html';
 }
@@ -191,14 +206,12 @@ function toggleCustomShift() {
     document.getElementById('customShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
 }
 
-// التحقق من تدوير الشهر وتجديد الـ 22 ساعة تلقائياً
 function checkMonthlyReset() {
     const now = new Date();
-    const currentMonth = now.getMonth(); // الشهر الحالي (0-11)
+    const currentMonth = now.getMonth();
     const storedMonth = localStorage.getItem('savedMonth');
 
     if (storedMonth === null || parseInt(storedMonth) !== currentMonth) {
-        // تجديد تلقائي بداية كل شهر ميلادي جديد
         localStorage.setItem('savedMonth', currentMonth);
         localStorage.setItem('remainingHours', '22');
         localStorage.setItem('permitsList', JSON.stringify([]));
@@ -215,7 +228,6 @@ function updateUI() {
     localStorage.setItem('remainingHours', remainingHours);
     localStorage.setItem('permitsList', JSON.stringify(permitsList));
 
-    // تحديث الجدول
     const tbody = document.getElementById('permitsTableBody');
     tbody.innerHTML = '';
     permitsList.forEach((p, index) => {
@@ -228,45 +240,74 @@ function updateUI() {
         `;
     });
 
-    // الفحص الذكي إذا تبقى أقل من 8 ساعات
     const suggestionBox = document.getElementById('suggestionBox');
     const suggestionText = document.getElementById('suggestionText');
     
     if (remainingHours < 8 && remainingHours > 0) {
-        // حساب وقت الخروج المقترح بناء على الشفت الحالي
-        let shiftStart = "22:00"; // افتراضي
-        const shiftVal = document.getElementById('shiftSelect').value;
-        if(shiftVal !== 'custom') {
-            shiftStart = shiftVal.split('-')[0];
-        } else {
-            shiftStart = document.getElementById('customStart').value || "22:00";
-        }
-        
         suggestionBox.style.display = 'block';
-        suggestionText.innerHTML = `⚠️ رصيدك أقل من 8 ساعات (${remainingHours} س متبقية). يمكنك الخروج اليوم الساعة المقترحة بناءً على رصيدك المتبقي!`;
+        suggestionText.innerHTML = `⚠️ رصيدك أقل من 8 ساعات (${remainingHours} س متبقية). يمكنك تنظيم أوقات خروجك بناءً على الرصيد المتبقي!`;
     } else {
         suggestionBox.style.display = 'none';
     }
 }
 
+function getShiftStartTime() {
+    const shiftVal = document.getElementById('shiftSelect').value;
+    if(shiftVal !== 'custom') {
+        return shiftVal.split('-')[0];
+    } else {
+        return document.getElementById('customStart').value || "07:00";
+    }
+}
+
 function addPermit() {
-    const hours = parseFloat(document.getElementById('permitInput').value);
-    if (!hours || hours <= 0) {
-        alert('الرجاء إدخال عدد ساعات صحيح');
+    let hoursInput = parseFloat(document.getElementById('permitHoursInput').value);
+    const exitTime = document.getElementById('exitTimeInput').value;
+
+    // إذا لم يدخل الساعات، ولكن أخل وقت الخروج، نقوم بحساب الفارق تلقائياً
+    if ((isNaN(hoursInput) || hoursInput <= 0) && exitTime) {
+        const start = getShiftStartTime(); // مثال "07:00"
+        const [startH, startM] = start.split(':').map(Number);
+        const [exitH, exitM] = exitTime.split(':').map(Number);
+        
+        let startTotalMins = startH * 60 + startM;
+        let exitTotalMins = exitH * 60 + exitM;
+        
+        // معالجة الشفتات التي تمتد لمنتصف الليل
+        if (exitTotalMins < startTotalMins) {
+            exitTotalMins += 24 * 60;
+        }
+        
+        const diffMins = exitTotalMins - startTotalMins;
+        if (diffMins <= 0) {
+            alert('وقت الخروج المدخل يسبق بداية الشفت!');
+            return;
+        }
+        hoursInput = parseFloat((diffMins / 60).toFixed(2));
+    }
+
+    if (!hoursInput || hoursInput <= 0) {
+        alert('الرجاء إدخال عدد ساعات صحيح أو تحديد وقت خروج دقيق');
         return;
     }
-    if (hours > remainingHours) {
+    if (hoursInput > remainingHours) {
         alert('عذراً، ساعات التصريح تتجاوز رصيدك المتبقي لهذا الشهر!');
         return;
     }
 
-    remainingHours -= hours;
+    remainingHours -= hoursInput;
     
+    // الحصول على التاريخ مع اسم اليوم (الأحد، الاثنين...)
     const now = new Date();
-    const dateStr = now.toLocaleDateString('ar-SA') + ' - ' + now.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+    const options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
+    const dateStr = now.toLocaleDateString('ar-SA', options) + ' - ' + now.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
 
-    permitsList.push({ date: dateStr, hours: hours });
-    document.getElementById('permitInput').value = '';
+    permitsList.push({ date: dateStr, hours: hoursInput });
+    
+    // تفريغ الحقول
+    document.getElementById('permitHoursInput').value = '';
+    document.getElementById('exitTimeInput').value = '';
+    
     updateUI();
 }
 
@@ -281,7 +322,6 @@ function editPermit(index) {
         return;
     }
 
-    // تعديل الرصيد بناءً على الفرق
     const diff = newHours - oldHours;
     if (diff > remainingHours) {
         alert('الرصيد المتبقي لا يكفي لهذه التعديلات!');

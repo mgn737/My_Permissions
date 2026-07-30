@@ -174,8 +174,36 @@
         <label>إدخال الاستئذان (اختر إحدى الطريقتين):</label>
         <div style="display: flex; gap: 10px;">
             <div style="flex: 1;">
-                <input type="number" id="permitHoursInput" placeholder="مثال: 2" min="0" max="22" step="1">
-                <span class="note-text">أدخل عدد الساعات</span>
+                <div style="display: flex; gap: 5px;">
+                    <select id="permitHoursSelect" style="flex: 1;">
+                        <option value="0">0 ساعة</option>
+                        <option value="1">1 ساعة</option>
+                        <option value="2">2 ساعة</option>
+                        <option value="3">3 ساعات</option>
+                        <option value="4">4 ساعات</option>
+                        <option value="5">5 ساعات</option>
+                        <option value="6">6 ساعات</option>
+                        <option value="7">7 ساعات</option>
+                        <option value="8">8 ساعات</option>
+                    </select>
+                    <select id="permitMinsSelect" style="flex: 1;">
+                        <option value="0">0 دقيقة</option>
+                        <option value="15">15 دقيقة</option>
+                        <option value="30">30 دقيقة</option>
+                        <option value="45">45 دقيقة</option>
+                        <script>
+                            // إضافة باقي الدقائق من 1 إلى 59 لاختيار دقيق
+                            let minsHtml = '';
+                            for(let i=1; i<60; i++) {
+                                if(i !== 15 && i !== 30 && i !== 45) {
+                                    minsHtml += `<option value="${i}">${i} دقيقة</option>`;
+                                }
+                            }
+                            document.write(minsHtml);
+                        </script>
+                    </select>
+                </div>
+                <span class="note-text">اختر الساعات والدقائق (بحد أقصى 8 ساعات)</span>
             </div>
             <div style="flex: 1;">
                 <input type="time" id="exitTimeInput">
@@ -222,7 +250,6 @@ function checkMonthlyReset() {
     const currentMonth = now.getMonth();
     const storedMonth = localStorage.getItem('savedMonth');
 
-    // 22 ساعة = 1320 دقيقة كحد أقصى أساسي
     if (storedMonth === null || parseInt(storedMonth) !== currentMonth) {
         localStorage.setItem('savedMonth', currentMonth);
         localStorage.setItem('remainingTotalMins', '1320');
@@ -249,6 +276,16 @@ function formatMinutesToReadable(totalMins) {
     return `${m} دقيقة`;
 }
 
+function getShiftStartTime() {
+    const shiftVal = document.getElementById('shiftSelect').value;
+    if(shiftVal !== 'custom') {
+        return shiftVal.split('-')[0];
+    } else {
+        return document.getElementById('customStart').value || "07:00";
+    }
+}
+
+// حساب أقصى وقت خروج دقيق بحيث يصفر الرصيد المتبقي تماماً بناءً على بداية الشفت
 function calculateMaxAllowedExitTime() {
     const start = getShiftStartTime();
     const [startH, startM] = start.split(':').map(Number);
@@ -259,7 +296,16 @@ function calculateMaxAllowedExitTime() {
     let finalH = Math.floor(allowedMins / 60) % 24;
     let finalM = allowedMins % 60;
     
-    return String(finalH).padStart(2, '0') + ':' + String(finalM).padStart(2, '0');
+    // تحويل الساعة إلى النظام بـ 12 ساعة مع تحديد ص / م بدقة
+    let period = 'ص';
+    let displayH = finalH;
+    if (finalH >= 12) {
+        period = 'م';
+        if (finalH > 12) displayH = finalH - 12;
+    }
+    if (displayH === 0) displayH = 12;
+    
+    return `${displayH}:${String(finalM).padStart(2, '0')} ${period}`;
 }
 
 function updateUI() {
@@ -290,28 +336,20 @@ function updateUI() {
     if (remainingTotalMins < 480 && remainingTotalMins > 0) {
         const maxExit = calculateMaxAllowedExitTime();
         suggestionBox.style.display = 'block';
-        suggestionText.innerHTML = `⚠️ رصيدك المتبقي قليل (${formatMinutesToReadable(remainingTotalMins)}). أقصى وقت يمكنك الخروج إليه بناءً على رصيدك هو الساعة ${maxExit}.`;
+        suggestionText.innerHTML = `⚠️ رصيدك المتبقي قليل (${formatMinutesToReadable(remainingTotalMins)}). أقصى وقت يمكنك الخروج إليه لتصفير رصيدك هو الساعة ${maxExit}.`;
     } else {
         suggestionBox.style.display = 'none';
     }
 }
 
-function getShiftStartTime() {
-    const shiftVal = document.getElementById('shiftSelect').value;
-    if(shiftVal !== 'custom') {
-        return shiftVal.split('-')[0];
-    } else {
-        return document.getElementById('customStart').value || "07:00";
-    }
-}
-
 function addPermit() {
-    const hoursInput = parseFloat(document.getElementById('permitHoursInput').value) || 0;
+    const selHours = parseInt(document.getElementById('permitHoursSelect').value) || 0;
+    const selMins = parseInt(document.getElementById('permitMinsSelect').value) || 0;
     const exitTime = document.getElementById('exitTimeInput').value;
     
     let permitMins = 0;
 
-    if (hoursInput === 0 && exitTime) {
+    if (selHours === 0 && selMins === 0 && exitTime) {
         const start = getShiftStartTime();
         const [startH, startM] = start.split(':').map(Number);
         const [exitH, exitM] = exitTime.split(':').map(Number);
@@ -328,12 +366,12 @@ function addPermit() {
             alert('وقت الخروج المدخل يسبق بداية الشفت!');
             return;
         }
-    } else if (hoursInput > 0) {
-        permitMins = Math.round(hoursInput * 60);
+    } else {
+        permitMins = (selHours * 60) + selMins;
     }
 
     if (permitMins <= 0) {
-        alert('الرجاء إدخال عدد ساعات صحيح أو تحديد وقت خروج دقيق');
+        alert('الرجاء اختيار عدد الساعات والدقائق أو تحديد وقت خروج دقيق');
         return;
     }
 
@@ -351,7 +389,8 @@ function addPermit() {
 
     permitsList.push({ date: dateStr, totalMins: permitMins });
     
-    document.getElementById('permitHoursInput').value = '';
+    document.getElementById('permitHoursSelect').value = '0';
+    document.getElementById('permitMinsSelect').value = '0';
     document.getElementById('exitTimeInput').value = '';
     
     updateUI();
@@ -359,19 +398,24 @@ function addPermit() {
 
 function editPermit(index) {
     const oldMins = permitsList[index].totalMins;
-    const oldHoursApprox = (oldMins / 60).toFixed(1);
+    const oldH = Math.floor(oldMins / 60);
+    const oldM = oldMins % 60;
     
-    const newHoursInput = prompt('عدل عدد ساعات التصريح (بالساعات):', oldHoursApprox);
+    const newHoursInput = prompt('عدل عدد ساعات التصريح (بالساعات):', oldH);
     if (newHoursInput === null) return;
+    const newMinsInput = prompt('عدل عدد دقائق التصريح (بالدقائق):', oldM);
+    if (newMinsInput === null) return;
     
-    const newHours = parseFloat(newHoursInput);
-    if (isNaN(newHours) || newHours <= 0) {
+    const newH = parseInt(newHoursInput) || 0;
+    const newM = parseInt(newMinsInput) || 0;
+    const newTotalMins = (newH * 60) + newM;
+
+    if (newTotalMins <= 0) {
         alert('قيمة غير صالحة');
         return;
     }
 
-    const newMins = Math.round(newHours * 60);
-    const diffMins = newMins - oldMins;
+    const diffMins = newTotalMins - oldMins;
 
     if (diffMins > remainingTotalMins) {
         alert('الرصيد المتبقي لا يكفي لهذه التعديلات!');
@@ -379,14 +423,13 @@ function editPermit(index) {
     }
 
     remainingTotalMins -= diffMins;
-    permitsList[index].totalMins = newMins;
+    permitsList[index].totalMins = newTotalMins;
     updateUI();
 }
 
 function deletePermit(index) {
     if (confirm('هل أنت متأكد من حذف هذا التصريح؟ سيتم إعادة الساعات إلى رصيدك.')) {
         remainingTotalMins += permitsList[index].totalMins;
-        // قصر الحد الأقصى للرصيد على 22 ساعة (1320 دقيقة) ولا يمكن تجاوزه أبداً
         if (remainingTotalMins > 1320) {
             remainingTotalMins = 1320;
         }

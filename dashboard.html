@@ -54,17 +54,6 @@
         .card-stats h3 { margin: 0 0 5px 0; color: #16a085; font-size: 15px; }
         .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; }
 
-        .suggestion-box {
-            background-color: #fef9e7;
-            border: 2px solid #f39c12;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            display: none;
-        }
-        .suggestion-box p { margin: 0; color: #d35400; font-weight: bold; font-size: 14px; }
-
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; }
         select, input {
@@ -142,11 +131,6 @@
     <div class="card-stats">
         <h3>رصيد التصاريح المتاحة هذا الشهر</h3>
         <span id="remainingHoursDisplay">22 ساعة</span>
-    </div>
-
-    <!-- صندوق الاقتراح الذكي -->
-    <div class="suggestion-box" id="suggestionBox">
-        <p id="suggestionText"></p>
     </div>
 
     <!-- اختيار الشفت -->
@@ -240,7 +224,6 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html';
 }
 
-// تعيين تاريخ اليوم تلقائياً عند فتح الصفحة
 document.getElementById('permitDateInput').valueAsDate = new Date();
 
 function logout() {
@@ -311,27 +294,6 @@ function formatTime12h(timeStr) {
     return `${h}:${String(m).padStart(2, '0')} ${period}`;
 }
 
-function calculateMaxAllowedExitTime() {
-    const times = getShiftTimes();
-    const [startH, startM] = times.start.split(':').map(Number);
-    
-    let totalStartMins = startH * 60 + startM;
-    let exitMins = totalStartMins + remainingTotalMins;
-    
-    let finalH = Math.floor(exitMins / 60) % 24;
-    let finalM = exitMins % 60;
-    
-    let period = 'ص';
-    let displayH = finalH;
-    if (finalH >= 12) {
-        period = 'م';
-        if (finalH > 12) displayH = finalH - 12;
-    }
-    if (displayH === 0) displayH = 12;
-    
-    return `${displayH}:${String(finalM).padStart(2, '0')} ${period}`;
-}
-
 function updateUI() {
     if (isNaN(remainingTotalMins) || remainingTotalMins > 1320) remainingTotalMins = 1320;
     
@@ -353,17 +315,6 @@ function updateUI() {
             </tr>
         `;
     });
-
-    const suggestionBox = document.getElementById('suggestionBox');
-    const suggestionText = document.getElementById('suggestionText');
-    
-    if (remainingTotalMins < 480 && remainingTotalMins > 0) {
-        const maxExit = calculateMaxAllowedExitTime();
-        suggestionBox.style.display = 'block';
-        suggestionText.innerHTML = `⚠️ رصيدك المتبقي قليل (${formatMinutesToReadable(remainingTotalMins)}). أقصى وقت يمكنك الخروج إليه لتصفير رصيدك بناءً على شفتك هو الساعة ${maxExit}.`;
-    } else {
-        suggestionBox.style.display = 'none';
-    }
 }
 
 function addPermit() {
@@ -409,8 +360,7 @@ function addPermit() {
     }
 
     if (permitMins > remainingTotalMins) {
-        const maxExit = calculateMaxAllowedExitTime();
-        alert(`❌ ساعات التصريح لاتكفي!\nرصيدك المتبقي فقط ${formatMinutesToReadable(remainingTotalMins)}.\n💡 اقتراح: يمكنك الخروج حتى الساعة ${maxExit} لتأخذ رصيدك المتبقي بالكامل ويصفر.`);
+        alert(`❌ ساعات التصريح لاتكفي!\nرصيدك المتبقي فقط ${formatMinutesToReadable(remainingTotalMins)}.`);
         return;
     }
 

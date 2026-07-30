@@ -54,6 +54,17 @@
         .card-stats h3 { margin: 0 0 5px 0; color: #16a085; font-size: 15px; }
         .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; }
 
+        /* صندوق خيار تصريح يومين المميز */
+        .two-days-box {
+            background-color: #fef9e7;
+            border: 2px dashed #f39c12;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .two-days-box h4 { margin: 0 0 10px 0; color: #d35400; font-size: 14px; text-align: right; }
+
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; }
         select, input {
@@ -86,6 +97,8 @@
             margin-top: 5px;
         }
         .action-btn:hover { background-color: #219653; }
+        .btn-two-days { background-color: #e67e22; }
+        .btn-two-days:hover { background-color: #d35400; }
 
         table {
             width: 100%;
@@ -133,6 +146,29 @@
         <span id="remainingHoursDisplay">22 ساعة</span>
     </div>
 
+    <!-- قسم تصريح يومين (يظهر فقط إذا كان الرصيد أقل من 16 ساعة وحتى 8 ساعات) -->
+    <div id="twoDaysSection" class="two-days-box">
+        <h4>⚡ خيار استئذان مقسم على (يومين):</h4>
+        <div class="form-group">
+            <label>تاريخ البدء:</label>
+            <input type="date" id="twoDaysDateInput">
+        </div>
+        <div class="form-group">
+            <label>توزيع وقت الخروج:</label>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <input type="time" id="exitTimeDay1">
+                    <span class="note-text">وقت الخروج (اليوم الأول)</span>
+                </div>
+                <div style="flex: 1;">
+                    <input type="time" id="exitTimeDay2">
+                    <span class="note-text">وقت الخروج (اليوم الثاني)</span>
+                </div>
+            </div>
+        </div>
+        <button class="action-btn btn-two-days" onclick="addTwoDaysPermit()">حفظ وتطبيق تصريح اليومين</button>
+    </div>
+
     <!-- اختيار الشفت -->
     <div class="form-group">
         <label>فترة العمل (الشفت):</label>
@@ -159,7 +195,7 @@
         <input type="date" id="permitDateInput">
     </div>
 
-    <!-- إدخال مرن ومتناسق -->
+    <!-- إدخال مرن ومتناسق (يوم واحد) -->
     <div class="form-group">
         <label>إدخال الاستئذان (اختر إحدى الطريقتين):</label>
         <div style="display: flex; gap: 10px;">
@@ -225,6 +261,7 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
 }
 
 document.getElementById('permitDateInput').valueAsDate = new Date();
+document.getElementById('twoDaysDateInput').valueAsDate = new Date();
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
@@ -300,6 +337,14 @@ function updateUI() {
     document.getElementById('remainingHoursDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
     localStorage.setItem('remainingTotalMins', remainingTotalMins);
     localStorage.setItem('permitsList', JSON.stringify(permitsList));
+
+    // التحكم بظهور خيار تصريح يومين بناءً على الرصيد (أقل من 16 ساعة = 960 دقيقة، وحتى 8 ساعات = 480 دقيقة)
+    const twoDaysSection = document.getElementById('twoDaysSection');
+    if (remainingTotalMins < 960 && remainingTotalMins >= 480) {
+        twoDaysSection.style.display = 'block';
+    } else {
+        twoDaysSection.style.display = 'none';
+    }
 
     const tbody = document.getElementById('permitsTableBody');
     tbody.innerHTML = '';
@@ -380,6 +425,57 @@ function addPermit() {
     document.getElementById('exitTimeInput').value = '';
     
     updateUI();
+}
+
+function addTwoDaysPermit() {
+    const exit1 = document.getElementById('exitTimeDay1').value;
+    const exit2 = document.getElementById('exitTimeDay2').value;
+    const selectedDate = document.getElementById('twoDaysDateInput').value;
+
+    if (!exit1 || !exit2) {
+        alert('الرجاء إدخال أوقات الخروج لليومين');
+        return;
+    }
+
+    const times = getShiftTimes();
+    const [startH, startM] = times.start.split(':').map(Number);
+    let startTotalMins = startH * 60 + startM;
+
+    const [ex1H, ex1M] = exit1.split(':').map(Number);
+    let ex1TotalMins = ex1H * 60 + ex1M;
+    if (ex1TotalMins < startTotalMins) ex1TotalMins += 24 * 60;
+    let mins1 = ex1TotalMins - startTotalMins;
+
+    const [ex2H, ex2M] = exit2.split(':').map(Number);
+    let ex2TotalMins = ex2H * 60 + ex2M;
+    if (ex2TotalMins < startTotalMins) ex2TotalMins += 24 * 60;
+    let mins2 = ex2TotalMins - startTotalMins;
+
+    let totalMinsNeeded = mins1 + mins2;
+
+    if (totalMinsNeeded <= 0) {
+        alert('أوقات الخروج المدخلة غير صالحة!');
+        return;
+    }
+
+    if (totalMinsNeeded > remainingTotalMins) {
+        alert(`❌ إجمالي الساعات المطلوبة (${formatMinutesToReadable(totalMinsNeeded)}) يتجاوز رصيدك المتبقي (${formatMinutesToReadable(remainingTotalMins)})!`);
+        return;
+    }
+
+    remainingTotalMins -= totalMinsNeeded;
+
+    let dObj = selectedDate ? new Date(selectedDate) : new Date();
+    let dateStr = dObj.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
+
+    permitsList.push({ date: `${dateStr} (يوم 1 - ${formatTime12h(exit1)})`, totalMins: mins1 });
+    permitsList.push({ date: `${dateStr} (يوم 2 - ${formatTime12h(exit2)})`, totalMins: mins2 });
+
+    document.getElementById('exitTimeDay1').value = '';
+    document.getElementById('exitTimeDay2').value = '';
+
+    updateUI();
+    alert('تم تسجيل واستقطاع التصريح لليومين بنجاح!');
 }
 
 function editPermit(index) {

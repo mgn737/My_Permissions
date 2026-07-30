@@ -54,7 +54,7 @@
         .card-stats h3 { margin: 0 0 5px 0; color: #16a085; font-size: 15px; }
         .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; }
 
-        .toggle-two-days-btn {
+        .dynamic-calc-btn {
             width: 100%;
             padding: 12px;
             background-color: #f39c12;
@@ -67,9 +67,9 @@
             margin-bottom: 15px;
             display: none;
         }
-        .toggle-two-days-btn:hover { background-color: #d35400; }
+        .dynamic-calc-btn:hover { background-color: #d35400; }
 
-        .two-days-box {
+        .calc-box {
             background-color: #fef9e7;
             border: 2px dashed #f39c12;
             padding: 15px;
@@ -77,7 +77,7 @@
             margin-bottom: 20px;
             display: none;
         }
-        .two-days-box h4 { margin: 0 0 10px 0; color: #d35400; font-size: 14px; text-align: right; }
+        .calc-box h4 { margin: 0 0 10px 0; color: #d35400; font-size: 14px; text-align: right; }
 
         .result-box {
             background-color: #fff;
@@ -122,8 +122,8 @@
             margin-top: 5px;
         }
         .action-btn:hover { background-color: #219653; }
-        .btn-two-days { background-color: #e67e22; }
-        .btn-two-days:hover { background-color: #d35400; }
+        .btn-calc { background-color: #e67e22; }
+        .btn-calc:hover { background-color: #d35400; }
 
         table {
             width: 100%;
@@ -170,20 +170,20 @@
         <span id="remainingHoursDisplay">22 ساعة</span>
     </div>
 
-    <!-- زر حاسبة توزيع التصريح على يومين (يظهر فقط إذا كان الرصيد تحت 16 ساعة) -->
-    <button id="toggleTwoDaysBtn" class="toggle-two-days-btn" onclick="toggleTwoDaysBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
+    <!-- زر الحاسبة الديناميكي (يتغير بحسب الرصيد) -->
+    <button id="dynamicCalcBtn" class="dynamic-calc-btn" onclick="toggleCalcBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
 
-    <div id="twoDaysSection" class="two-days-box">
-        <h4>⚡ حاسبة وقت الخروج (معلومات استكشافية):</h4>
+    <div id="calcSection" class="calc-box">
+        <h4 id="calcBoxTitle">⚡ حاسبة وقت الخروج (معلومات استكشافية):</h4>
         
         <div class="form-group">
-            <label>تاريخ البدء (اليوم الأول):</label>
-            <input type="date" id="twoDaysDateInput">
+            <label>تاريخ البدء:</label>
+            <input type="date" id="calcDateInput">
         </div>
 
         <div class="form-group">
             <label>فترة العمل (الشفت) للحاسبة:</label>
-            <select id="twoDaysShiftSelect" onchange="toggleTwoDaysCustomShift()">
+            <select id="calcShiftSelect" onchange="toggleCalcCustomShift()">
                 <option value="07:00-15:00">الفترة الأولى (7 ص - 3 م)</option>
                 <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
                 <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
@@ -192,18 +192,18 @@
             </select>
         </div>
 
-        <div id="twoDaysCustomShiftBox" style="display: none; margin-bottom: 15px;">
+        <div id="calcCustomShiftBox" style="display: none; margin-bottom: 15px;">
             <div style="display: flex; gap: 10px; width: 100%;">
-                <div style="flex:1;"><label>بداية:</label><input type="time" id="twoDaysCustomStart" value="07:00"></div>
-                <div style="flex:1;"><label>نهاية:</label><input type="time" id="twoDaysCustomEnd" value="15:00"></div>
+                <div style="flex:1;"><label>بداية:</label><input type="time" id="calcCustomStart" value="07:00"></div>
+                <div style="flex:1;"><label>نهاية:</label><input type="time" id="calcCustomEnd" value="15:00"></div>
             </div>
         </div>
 
-        <button class="action-btn btn-two-days" onclick="calculateTwoDaysInfo()">احسب وقت الخروج (معلومات)</button>
+        <button class="action-btn btn-calc" onclick="calculateInfo()">احسب وقت الخروج (معلومات)</button>
         
-        <div id="twoDaysResultBox" class="result-box">
-            <p id="resDay1Text"></p>
-            <p id="resDay2Text"></p>
+        <div id="calcResultBox" class="result-box">
+            <p id="resText1"></p>
+            <p id="resText2"></p>
         </div>
     </div>
 
@@ -293,7 +293,7 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
 }
 
 document.getElementById('permitDateInput').valueAsDate = new Date();
-document.getElementById('twoDaysDateInput').valueAsDate = new Date();
+document.getElementById('calcDateInput').valueAsDate = new Date();
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
@@ -305,13 +305,13 @@ function toggleCustomShift() {
     document.getElementById('customShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
 }
 
-function toggleTwoDaysCustomShift() {
-    const val = document.getElementById('twoDaysShiftSelect').value;
-    document.getElementById('twoDaysCustomShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
+function toggleCalcCustomShift() {
+    const val = document.getElementById('calcShiftSelect').value;
+    document.getElementById('calcCustomShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
 }
 
-function toggleTwoDaysBox() {
-    const box = document.getElementById('twoDaysSection');
+function toggleCalcBox() {
+    const box = document.getElementById('calcSection');
     box.style.display = (box.style.display === 'block') ? 'none' : 'block';
 }
 
@@ -361,8 +361,8 @@ function getShiftTimes() {
     return { start, end };
 }
 
-function getTwoDaysShiftTimes() {
-    const shiftVal = document.getElementById('twoDaysShiftSelect').value;
+function getCalcShiftTimes() {
+    const shiftVal = document.getElementById('calcShiftSelect').value;
     let start = "07:00";
     let end = "15:00";
     if(shiftVal !== 'custom') {
@@ -370,8 +370,8 @@ function getTwoDaysShiftTimes() {
         start = parts[0];
         end = parts[1];
     } else {
-        start = document.getElementById('twoDaysCustomStart').value || "07:00";
-        end = document.getElementById('twoDaysCustomEnd').value || "15:00";
+        start = document.getElementById('calcCustomStart').value || "07:00";
+        end = document.getElementById('calcCustomEnd').value || "15:00";
     }
     return { start, end };
 }
@@ -395,15 +395,24 @@ function updateUI() {
     localStorage.setItem('remainingTotalMins', remainingTotalMins);
     localStorage.setItem('permitsList', JSON.stringify(permitsList));
 
-    const toggleBtn = document.getElementById('toggleTwoDaysBtn');
-    const twoDaysSection = document.getElementById('twoDaysSection');
+    const dynamicBtn = document.getElementById('dynamicCalcBtn');
+    const calcSection = document.getElementById('calcSection');
+    const calcBoxTitle = document.getElementById('calcBoxTitle');
     
-    // يظهر فقط إذا كان الرصيد المتاح تحت 16 ساعة (أقل من 960 دقيقة)
-    if (remainingTotalMins < 960) {
-        toggleBtn.style.display = 'block';
+    // الشروط للزر الديناميكي:
+    // 1. إذا كان الرصيد أقل من 16 ساعة وأكبر من أو يساوي 8 ساعات -> حاسبة يومين
+    // 2. إذا كان الرصيد أقل من 8 ساعات -> حاسبة يوم واحد
+    if (remainingTotalMins < 960 && remainingTotalMins >= 480) {
+        dynamicBtn.style.display = 'block';
+        dynamicBtn.innerText = '⚡ حاسبة توزيع التصريح على (يومين)';
+        calcBoxTitle.innerText = '⚡ حاسبة وقت الخروج (توزيع على يومين):';
+    } else if (remainingTotalMins < 480 && remainingTotalMins > 0) {
+        dynamicBtn.style.display = 'block';
+        dynamicBtn.innerText = '⚡ حاسبة وقت الخروج (ليوم واحد)';
+        calcBoxTitle.innerText = '⚡ حاسبة وقت الخروج (ليوم واحد):';
     } else {
-        toggleBtn.style.display = 'none';
-        twoDaysSection.style.display = 'none';
+        dynamicBtn.style.display = 'none';
+        calcSection.style.display = 'none';
     }
 
     const tbody = document.getElementById('permitsTableBody');
@@ -487,17 +496,8 @@ function addPermit() {
     updateUI();
 }
 
-function calculateTwoDaysInfo() {
-    if (remainingTotalMins <= 480) {
-        alert('الرصيد المتبقي أقل من أو يساوي 8 ساعات.');
-        return;
-    }
-
-    // 1. خصم 8 ساعات (480 دقيقة) حق اليوم الثاني من الإجمالي
-    const remainderAfterDay2 = remainingTotalMins - 480;
-
-    // 2. حساب مدة الشفت المختار بالدقائق
-    const times = getTwoDaysShiftTimes();
+function calculateInfo() {
+    const times = getCalcShiftTimes();
     const [startH, startM] = times.start.split(':').map(Number);
     const [endH, endM] = times.end.split(':').map(Number);
     
@@ -507,32 +507,56 @@ function calculateTwoDaysInfo() {
     
     const shiftTotalMins = endTotalMins - startTotalMins; // غالباً 8 ساعات (480 دقيقة)
 
-    // 3. طرح الناتج من إجمالي ساعات الشفت لمعرفة ساعات الدوام في اليوم الأول
-    const workMinsDay1 = shiftTotalMins - remainderAfterDay2;
-
-    if (workMinsDay1 <= 0) {
-        alert('القيم الناتجة غير صالحة بناءً على الرصيد والشفت.');
-        return;
-    }
-
-    // وقت الخروج في اليوم الأول = بداية الشفت + ساعات الدوام الفعلية
-    let exit1TotalMins = (startTotalMins + workMinsDay1) % (24 * 60);
-    let ex1H = Math.floor(exit1TotalMins / 60);
-    let ex1M = exit1TotalMins % 60;
-    let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
-
-    const selectedDate = document.getElementById('twoDaysDateInput').value;
+    const selectedDate = document.getElementById('calcDateInput').value;
     let dObj = selectedDate ? new Date(selectedDate) : new Date();
     let dateStr1 = dObj.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
-    
-    let dObj2 = new Date(dObj);
-    dObj2.setDate(dObj2.getDate() + 1);
-    let dateStr2 = dObj2.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
 
-    // عرض المعلومات فقط (معلومات استكشافية بدون خصم رصيد)
-    document.getElementById('resDay1Text').innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
-    document.getElementById('resDay2Text').innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (يخصم 8 ساعات كاملة).`;
-    document.getElementById('twoDaysResultBox').style.display = 'block';
+    const resultBox = document.getElementById('calcResultBox');
+    const p1 = document.getElementById('resText1');
+    const p2 = document.getElementById('resText2');
+
+    // الحالة الأولى: الرصيد بين 8 و 16 ساعة (توزيع على يومين)
+    if (remainingTotalMins >= 480 && remainingTotalMins < 960) {
+        const remainderAfterDay2 = remainingTotalMins - 480;
+        const workMinsDay1 = shiftTotalMins - remainderAfterDay2;
+
+        if (workMinsDay1 <= 0) {
+            alert('القيم الناتجة غير صالحة.');
+            return;
+        }
+
+        let exit1TotalMins = (startTotalMins + workMinsDay1) % (24 * 60);
+        let ex1H = Math.floor(exit1TotalMins / 60);
+        let ex1M = exit1TotalMins % 60;
+        let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
+
+        let dObj2 = new Date(dObj);
+        dObj2.setDate(dObj2.getDate() + 1);
+        let dateStr2 = dObj2.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
+
+        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
+        p2.innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (يخصم 8 ساعات كاملة).`;
+        p2.style.display = 'block';
+    } 
+    // الحالة الثانية: الرصيد أقل من 8 ساعات (ليوم واحد فقط)
+    else if (remainingTotalMins < 480 && remainingTotalMins > 0) {
+        const workMinsDay1 = shiftTotalMins - remainingTotalMins;
+
+        if (workMinsDay1 < 0) {
+            alert('الرصيد المتبقي أكبر من ساعات الشفت.');
+            return;
+        }
+
+        let exit1TotalMins = (startTotalMins + workMinsDay1) % (24 * 60);
+        let ex1H = Math.floor(exit1TotalMins / 60);
+        let ex1M = exit1TotalMins % 60;
+        let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
+
+        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b> (تستهلك رصيدك المتبقي ${formatMinutesToReadable(remainingTotalMins)}).`;
+        p2.style.display = 'none'; // لا يوجد يوم ثانٍ
+    }
+
+    resultBox.style.display = 'block';
 }
 
 function editPermit(index) {

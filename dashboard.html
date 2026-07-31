@@ -192,7 +192,7 @@
         <div class="form-group">
             <label>فترة العمل (الشفت) للحاسبة:</label>
             <select id="calcShiftSelect" onchange="toggleCalcCustomShift()">
-                <option value="07:00-15:00">الفترة الأولى (7 ص - 3 م)</option>
+                <option value="07:15-15:15">الفترة الأولى (7:15 ص - 3:15 م)</option>
                 <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
                 <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
                 <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
@@ -201,8 +201,8 @@
         </div>
         <div id="calcCustomShiftBox" style="display: none; margin-bottom: 15px;">
             <div style="display: flex; gap: 10px; width: 100%;">
-                <div style="flex:1;"><label>بداية:</label><input type="time" id="calcCustomStart" value="07:00"></div>
-                <div style="flex:1;"><label>نهاية:</label><input type="time" id="calcCustomEnd" value="15:00"></div>
+                <div style="flex:1;"><label>بداية:</label><input type="time" id="calcCustomStart" value="07:15"></div>
+                <div style="flex:1;"><label>نهاية:</label><input type="time" id="calcCustomEnd" value="15:15"></div>
             </div>
         </div>
         <button class="action-btn btn-calc" onclick="calculateInfo()">احسب وقت الخروج (معلومات)</button>
@@ -215,7 +215,7 @@
     <div class="form-group">
         <label>فترة العمل (الشفت):</label>
         <select id="shiftSelect" onchange="updateUI(); toggleCustomShift();">
-            <option value="07:00-15:00">الفترة الأولى (7 ص - 3 م)</option>
+            <option value="07:15-15:15">الفترة الأولى (7:15 ص - 3:15 م)</option>
             <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
             <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
             <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
@@ -408,26 +408,26 @@ function formatMinutesToReadable(totalMins) {
 
 function getShiftTimes() {
     const shiftVal = document.getElementById('shiftSelect').value;
-    let start = "07:00", end = "15:00";
+    let start = "07:15", end = "15:15";
     if(shiftVal !== 'custom') {
         const parts = shiftVal.split('-');
         start = parts[0]; end = parts[1];
     } else {
-        start = document.getElementById('customStart').value || "07:00";
-        end = document.getElementById('customEnd').value || "15:00";
+        start = document.getElementById('customStart').value || "07:15";
+        end = document.getElementById('customEnd').value || "15:15";
     }
     return { start, end };
 }
 
 function getCalcShiftTimes() {
     const shiftVal = document.getElementById('calcShiftSelect').value;
-    let start = "07:00", end = "15:00";
+    let start = "07:15", end = "15:15";
     if(shiftVal !== 'custom') {
         const parts = shiftVal.split('-');
         start = parts[0]; end = parts[1];
     } else {
-        start = document.getElementById('calcCustomStart').value || "07:00";
-        end = document.getElementById('calcCustomEnd').value || "15:00";
+        start = document.getElementById('calcCustomStart').value || "07:15";
+        end = document.getElementById('calcCustomEnd').value || "15:15";
     }
     return { start, end };
 }

@@ -26,6 +26,12 @@
         window.getDoc = getDoc;
         window.setDoc = setDoc;
         window.updateDoc = updateDoc;
+
+        // إعطاء إشارة بأن فايربيس جاهز للعمل
+        window.isFirebaseReady = true;
+        if (typeof window.startApp === 'function') {
+            window.startApp();
+        }
     </script>
 
     <style>
@@ -321,8 +327,13 @@ let remainingTotalMins = 1320;
 let permitsList = [];
 let isDataLoaded = false;
 
-// دالة جلب البيانات مع مهلة زمنية 5 ثوانٍ لضمان عدم التعليق
 async function loadDataFromCloud() {
+    // التأكد التام من جاهزية فايربيس وإلا الانتظار قليلاً
+    if (!window.db || !window.doc) {
+        setTimeout(loadDataFromCloud, 200);
+        return;
+    }
+
     const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('timeout'), 5000));
 
     try {
@@ -373,6 +384,7 @@ async function loadDataFromCloud() {
 
 async function saveDataToCloud() {
     try {
+        if (!window.db || !window.doc) return;
         const now = new Date();
         const currentMonth = now.getMonth();
         const docRef = window.doc(window.db, "permitsData", currentUsername);
@@ -620,8 +632,14 @@ window.deletePermit = async function(index) {
     }
 }
 
-// بدء تحميل البيانات عند فتح الصفحة
-loadDataFromCloud();
+// دالة البدء الذكية التي تنتظر تحميل فايربيس
+window.startApp = function() {
+    loadDataFromCloud();
+};
+
+if (window.isFirebaseReady) {
+    window.startApp();
+}
 </script>
 
 </body>

@@ -3,41 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جاري التحميل...</title>
-    
-    <!-- هذا السطر هو السحر: ينتظر 5 ثواني ثم يحولك لصفحة home.html -->
-    <meta http-equiv="refresh" content="2;url=home.html">
-    
+    <title>حاسبة وقت الخروج - الرئيسية</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
             background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            flex-direction: column;
-            font-family: Arial, sans-serif;
         }
-        .splash-logo {
-            max-width: 140px;
-            margin-bottom: 20px;
+        .container {
+            background-color: #fff;
+            padding: 25px;
             border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
         }
-        .loading-text {
-            color: #2c3e50;
-            font-size: 18px;
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 { color: #2c3e50; font-size: 18px; margin: 0; }
+        .login-btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
             font-weight: bold;
-            margin-top: 10px;
         }
+        .login-btn:hover { background-color: #219653; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; }
+        select, input {
+            width: 100%;
+            padding: 9px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #f0f2f5;
+            text-align: right;
+        }
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .action-btn:hover { background-color: #d35400; }
+        .result-box {
+            background-color: #fef9e7;
+            border: 1px solid #f39c12;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            text-align: right;
+            display: none;
+        }
+        .result-box p { margin: 6px 0; font-size: 13px; color: #2c3e50; }
     </style>
 </head>
 <body>
 
-    <!-- الشعار الترحيبي -->
-    <img src="IMG_3978.png" class="splash-logo" alt="شعار">
+<div class="container">
+    <div class="header-flex">
+        <a href="login.html" class="login-btn">تسجيل الدخول</a>
+        <h2>حاسبة وقت الخروج المتاحة</h2>
+    </div>
+
+    <div class="form-group">
+        <label>تاريخ البدء:</label>
+        <input type="date" id="calcDateInput">
+    </div>
+
+    <div class="form-group">
+        <label>فترة العمل (الشفت):</label>
+        <select id="calcShiftSelect" onchange="toggleCalcCustomShift()">
+            <option value="07:15-15:15">الفترة الأولى (7:15 ص - 3:15 م)</option>
+            <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
+            <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
+            <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
+            <option value="custom">مخصص (تحديد يدوي)</option>
+        </select>
+    </div>
+
+    <div id="calcCustomShiftBox" style="display: none; margin-bottom: 15px;">
+        <div style="display: flex; gap: 10px; width: 100%;">
+            <div style="flex:1;"><label>بداية:</label><input type="time" id="calcCustomStart" value="07:15"></div>
+            <div style="flex:1;"><label>نهاية:</label><input type="time" id="calcCustomEnd" value="15:15"></div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>الرصيد المراد حسابه:</label>
+        <select id="inputHours">
+            <option value="8">8 ساعات (رصيد التأخير)</option>
+            <option value="22" selected>22 ساعة (رصيد التصاريح كامل)</option>
+        </select>
+    </div>
+
+    <button class="action-btn" onclick="calculateInfo()">احسب وقت الخروج</button>
+
+    <div id="calcResultBox" class="result-box">
+        <p id="resText1"></p>
+        <p id="resText2"></p>
+    </div>
+</div>
+
+<script>
+document.getElementById('calcDateInput').valueAsDate = new Date();
+
+// إذا كان المستخدم مسجلاً دخوله مسبقاً، نوجهه مباشرة إلى لوحة التحكم الخاصة به
+if (localStorage.getItem('isLoggedIn') === 'true') {
+    window.location.href = 'home.html';
+}
+
+function toggleCalcCustomShift() {
+    const val = document.getElementById('calcShiftSelect').value;
+    document.getElementById('calcCustomShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
+}
+
+function getCalcShiftTimes() {
+    const shiftVal = document.getElementById('calcShiftSelect').value;
+    let start = "07:15", end = "15:15";
+    if(shiftVal !== 'custom') {
+        const parts = shiftVal.split('-');
+        start = parts[0]; end = parts[1];
+    } else {
+        start = document.getElementById('calcCustomStart').value || "07:15";
+        end = document.getElementById('calcCustomEnd').value || "15:15";
+    }
+    return { start, end };
+}
+
+function formatTime12h(timeStr) {
+    if (!timeStr) return '';
+    let [h, m] = timeStr.split(':').map(Number);
+    let period = 'ص';
+    if (h >= 12) {
+        period = 'م';
+        if (h > 12) h -= 12;
+    }
+    if (h === 0) h = 12;
+    return `${h}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+function formatMinutesToReadable(totalMins) {
+    if (isNaN(totalMins) || totalMins <= 0) return "0 ساعة";
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    if (h > 0 && m > 0) return `${h} ساعة و ${m} دقيقة`;
+    if (h > 0) return `${h} ساعة`;
+    return `${m} دقيقة`;
+}
+
+function calculateInfo() {
+    const times = getCalcShiftTimes();
+    const [startH, startM] = times.start.split(':').map(Number);
+    const [endH, endM] = times.end.split(':').map(Number);
     
-    <div class="loading-text">جاري التحميل...</div>
+    let startTotalMins = startH * 60 + startM;
+    let endTotalMins = endH * 60 + endM;
+    if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
+    
+    const shiftTotalMins = endTotalMins - startTotalMins;
+    const targetMins = document.getElementById('inputHours').value === '8' ? 480 : 1320;
+
+    const selectedDate = document.getElementById('calcDateInput').value;
+    let dObj = selectedDate ? new Date(selectedDate) : new Date();
+    let dateStr1 = dObj.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
+
+    const resultBox = document.getElementById('calcResultBox');
+    const p1 = document.getElementById('resText1');
+    const p2 = document.getElementById('resText2');
+
+    if (targetMins > shiftTotalMins) {
+        const remainder = targetMins - shiftTotalMins;
+        let dObj2 = new Date(dObj);
+        dObj2.setDate(dObj2.getDate() + 1);
+        let dateStr2 = dObj2.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
+
+        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام الشفت كامل وتستنفد جزءاً من الرصيد.`;
+        p2.innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> تحتاج استئذان أو خصم ما يعادل <b>${formatMinutesToReadable(remainder)}</b>.`;
+        p2.style.display = 'block';
+    } else {
+        const workMinsDay1 = shiftTotalMins - targetMins;
+        let exit1TotalMins = (startTotalMins + workMinsDay1) % (24 * 60);
+        let ex1H = Math.floor(exit1TotalMins / 60);
+        let ex1M = exit1TotalMins % 60;
+        let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
+
+        p1.innerHTML = `📌 <b>في اليوم (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} فقط ← وقت الخروج المسموح: <b>${exit1Str}</b>.`;
+        p2.style.display = 'none';
+    }
+
+    resultBox.style.display = 'block';
+}
+</script>
 
 </body>
 </html>

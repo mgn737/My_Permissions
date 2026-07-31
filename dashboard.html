@@ -27,7 +27,6 @@
         window.setDoc = setDoc;
         window.updateDoc = updateDoc;
 
-        // إعطاء إشارة بأن فايربيس جاهز للعمل
         window.isFirebaseReady = true;
         if (typeof window.startApp === 'function') {
             window.startApp();
@@ -82,7 +81,8 @@
             margin-bottom: 20px;
         }
         .card-stats h3 { margin: 0 0 5px 0; color: #16a085; font-size: 15px; }
-        .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; }
+        .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; display: block; }
+        .card-stats small { font-size: 13px; color: #7f8c8d; margin-top: 5px; display: block; }
 
         .dynamic-calc-btn {
             width: 100%;
@@ -179,6 +179,7 @@
     <div class="card-stats">
         <h3>رصيد التصاريح المتاحة هذا الشهر</h3>
         <span id="remainingHoursDisplay">جاري التحميل...</span>
+        <small>رصيد التأخير المتبقي: <span id="remainingDelayDisplay">--</span></small>
     </div>
 
     <button id="dynamicCalcBtn" class="dynamic-calc-btn" onclick="toggleCalcBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
@@ -324,6 +325,7 @@ function toggleCalcBox() {
 }
 
 let remainingTotalMins = 1320;
+let remainingDelayMins = 480;
 let permitsList = [];
 let isDataLoaded = false;
 
@@ -333,24 +335,10 @@ async function loadDataFromCloud() {
         return;
     }
 
-    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('timeout'), 5000));
-
     try {
         const docRef = window.doc(window.db, "permitsData", currentUsername);
-        const fetchPromise = window.getDoc(docRef);
+        const docSnap = await window.getDoc(docRef);
 
-        const result = await Promise.race([fetchPromise, timeoutPromise]);
-
-        if (result === 'timeout') {
-            console.warn("تأخر الاتصال بـ Firebase، تم تخطي جاري التحميل...");
-            if (!isDataLoaded) {
-                isDataLoaded = true;
-                updateUI();
-            }
-            return;
-        }
-
-        const docSnap = result;
         const now = new Date();
         const currentMonth = now.getMonth();
 
@@ -358,16 +346,19 @@ async function loadDataFromCloud() {
             const data = docSnap.data();
             if (data.savedMonth === currentMonth) {
                 remainingTotalMins = (data.remainingTotalMins !== undefined) ? Number(data.remainingTotalMins) : 1320;
+                remainingDelayMins = (data.remainingDelayMins !== undefined) ? Number(data.remainingDelayMins) : 480;
                 permitsList = data.permitsList || [];
             } else {
                 remainingTotalMins = 1320;
+                remainingDelayMins = 480;
                 permitsList = [];
-                await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, permitsList });
+                await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, remainingDelayMins, permitsList }, { merge: true });
             }
         } else {
             remainingTotalMins = 1320;
+            remainingDelayMins = 480;
             permitsList = [];
-            await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, permitsList });
+            await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, remainingDelayMins, permitsList }, { merge: true });
         }
         
         isDataLoaded = true;
@@ -390,8 +381,9 @@ async function saveDataToCloud() {
         await window.setDoc(docRef, {
             savedMonth: currentMonth,
             remainingTotalMins: Number(remainingTotalMins),
+            remainingDelayMins: Number(remainingDelayMins),
             permitsList: permitsList
-        });
+        }, { merge: true });
     } catch (e) {
         console.error("خطأ في الحفظ:", e);
     }
@@ -447,8 +439,10 @@ function formatTime12h(timeStr) {
 function updateUI() {
     if (isNaN(remainingTotalMins) || remainingTotalMins > 1320) remainingTotalMins = 1320;
     if (remainingTotalMins < 0) remainingTotalMins = 0;
+    if (isNaN(remainingDelayMins)) remainingDelayMins = 480;
     
     document.getElementById('remainingHoursDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
+    document.getElementById('remainingDelayDisplay').innerText = formatMinutesToReadable(remainingDelayMins);
 
     const dynamicBtn = document.getElementById('dynamicCalcBtn');
     const calcSection = document.getElementById('calcSection');
@@ -528,7 +522,6 @@ window.addPermit = async function() {
         let endTotalMins = endH * 60 + endM;
         if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
         
-        // حساب وقت الخروج بطرح مدة الاستئذان من وقت نهاية الشفت
         let exitTotalMins = endTotalMins - permitMins;
         if (exitTotalMins < 0) exitTotalMins += 24 * 60;
         

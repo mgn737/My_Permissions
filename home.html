@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الخدمات الالكترونية - الرئيسية</title>
+    <title>لوحة التحكم الرئيسية</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,7 +14,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 90vh;
         }
         .container {
             background-color: #fff;
@@ -25,16 +25,13 @@
             max-width: 400px;
             text-align: center;
         }
-        h2 {
-            color: #2c3e50;
-            margin-bottom: 25px;
-        }
-        .menu-btn {
+        h2 { color: #2c3e50; margin-bottom: 25px; }
+        .action-btn {
             display: block;
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             margin-bottom: 15px;
-            background-color: #2980b9;
+            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 8px;
@@ -43,46 +40,40 @@
             cursor: pointer;
             text-decoration: none;
             box-sizing: border-box;
-            transition: background-color 0.2s;
+            transition: background 0.3s;
         }
-        .menu-btn:hover {
-            opacity: 0.9;
-        }
-        .btn-delay {
-            background-color: #e67e22;
-        }
+        .action-btn:hover { background-color: #2980b9; }
+        .btn-delay { background-color: #e67e22; }
+        .btn-delay:hover { background-color: #d35400; }
         .logout-btn {
             background-color: #e74c3c;
-            margin-top: 20px;
+            margin-top: 25px;
         }
+        .logout-btn:hover { background-color: #c0392b; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>الخدمات الإلكترونية</h2>
+    <h2>لوحة التحكم والخدمات</h2>
     
-    <!-- زر إدارة التصاريح الشهرية -->
-    <a href="dashboard.html" class="menu-btn">إدارة التصاريح الشهرية</a>
-
-    <!-- زر إدارة التأخير الجديد -->
-    <a href="delay.html" class="menu-btn btn-delay">إدارة التأخير</a>
-
-    <!-- زر تسجيل الخروج -->
-    <button class="menu-btn logout-btn" onclick="logout()">تسجيل الخروج</button>
+    <a href="dashboard.html" class="action-btn">إدارة التصاريح الشهرية</a>
+    <a href="delay.html" class="action-btn btn-delay">إدارة التأخير وسجلاته</a>
+    
+    <button class="action-btn logout-btn" onclick="logout()">تسجيل الخروج</button>
 </div>
 
 <script>
-    // التحقق من تسجيل الدخول
-    if (localStorage.getItem('isLoggedIn') !== 'true') {
-        window.location.href = 'login.html';
-    }
+// حماية الصفحة: إذا لم يكن مسجلاً دخوله، يُطرد إلى صفحة الدخول
+if (localStorage.getItem('isLoggedIn') !== 'true') {
+    window.location.href = 'login.html';
+}
 
-    function logout() {
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
-    }
+function logout() {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
+    window.location.href = 'index.html';
+}
 </script>
 
 </body>

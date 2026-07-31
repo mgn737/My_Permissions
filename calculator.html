@@ -192,60 +192,60 @@ function calculateExitTime() {
     let endTotalMins = endH * 60 + endM;
     const permitTotalMins = pHours * 60 + pMinutes;
 
+    // معالجة الشفتات الليلية (تتجاوز منتصف الليل)
+    if (endTotalMins <= startTotalMins) {
+        endTotalMins += 24 * 60;
+    }
+
+    const singleShiftMins = endTotalMins - startTotalMins;
+
     if (type === '1') {
         // نظام يوم واحد
-        if (endTotalMins <= startTotalMins) {
-            endTotalMins += 24 * 60;
-        }
-
-        const totalShiftMins = endTotalMins - startTotalMins;
-        const actualWorkMins = totalShiftMins - permitTotalMins;
-        const exitTotalMins = startTotalMins + actualWorkMins;
-
-        const formattedExit = format12Hour(exitTotalMins);
-        const actH = Math.floor(actualWorkMins / 60);
-        const actM = actualWorkMins % 60;
-
-        resultText.innerHTML = `
-            وقت الخروج بعد خصم التصريح: <span class="highlight">${formattedExit}</span><br>
-            ساعات العمل الفعلية للدوام: <span class="highlight">${actH} ساعة و ${actM} دقيقة</span>
-        `;
-    } else {
-        // نظام يومين (تغطية اليوم الثاني بالكامل بالتصريح وباقي الساعات لليوم الأول)
-        if (endTotalMins <= startTotalMins) {
-            endTotalMins += 24 * 60;
-        }
-
-        const singleShiftMins = endTotalMins - startTotalMins; // مدة الشفت الواحد (مثلاً 8 ساعات)
-        const day2CoverMins = singleShiftMins; // اليوم الثاني كامل مغطى (نفس مدة الشفت)
-
-        if (permitTotalMins <= day2CoverMins) {
-            // إذا كان التصريح أقل من أو يساوي شفت اليوم الثاني
-            // اليوم الثاني بالكامل بصم واطلع، واليوم الأول دوام كامل
-            resultText.innerHTML = `
-                اليوم الأول: <span class="highlight">دوام كامل (لا يوجد خروج مبكر)</span><br>
-                ساعات العمل في اليوم الأول: <span class="highlight">${Math.floor(singleShiftMins / 60)} ساعات</span><br>
-                اليوم الثاني: <span class="highlight">بصم واطلع</span><br>
-                ساعات العمل في اليوم الثاني: <span class="highlight">لا يوجد (مغطى بالتصريح)</span>
-            `;
+        if (permitTotalMins > singleShiftMins) {
+            resultText.innerHTML = `<span class="highlight" style="color:#e74c3c;">عذراً، رصيد التصريح المدخل أكبر من إجمالي ساعات الشفت الواحد!</span>`;
         } else {
-            // إذا كان التصريح أكبر من شفت اليوم الثاني (يعني باقي رصيد يخصم من اليوم الأول)
-            const remainingPermitMins = permitTotalMins - day2CoverMins;
-            const day1WorkMins = singleShiftMins - remainingPermitMins;
-            
-            // وقت الخروج في اليوم الأول = بداية الشفت + ساعات العمل المتبقية في اليوم الأول
-            const exitTotalMins = startTotalMins + day1WorkMins;
-            const formattedExit = format12Hour(exitTotalMins);
+            const actualWorkMins = singleShiftMins - permitTotalMins;
+            const exitTotalMins = startTotalMins + actualWorkMins;
 
-            const d1H = Math.floor(day1WorkMins / 60);
-            const d1M = day1WorkMins % 60;
+            const formattedExit = format12Hour(exitTotalMins);
+            const actH = Math.floor(actualWorkMins / 60);
+            const actM = actualWorkMins % 60;
 
             resultText.innerHTML = `
-                وقت الخروج في اليوم الأول: <span class="highlight">${formattedExit}</span><br>
-                ساعات العمل في اليوم الأول: <span class="highlight">${d1H} ساعة و ${d1M} دقيقة</span><br>
-                اليوم الثاني: <span class="highlight">بصم واطلع</span><br>
-                ساعات العمل في اليوم الثاني: <span class="highlight">لا يوجد (مغطى بالتصريح)</span>
+                وقت الخروج بعد خصم التصريح: <span class="highlight">${formattedExit}</span><br>
+                ساعات العمل الفعلية للدوام: <span class="highlight">${actH} ساعة و ${actM} دقيقة</span>
             `;
+        }
+    } else {
+        // نظام يومين (تغطية اليوم الثاني بالكامل)
+        const day2CoverMins = singleShiftMins;
+
+        if (permitTotalMins < day2CoverMins) {
+            // إذا كان التصريح أقل من شفت اليوم الثاني، فلا يمكن تغطيته
+            const requiredHours = Math.floor(day2CoverMins / 60);
+            const requiredMins = day2CoverMins % 60;
+            resultText.innerHTML = `<span class="highlight" style="color:#e74c3c;">عذراً، رصيد التصريح المدخل لا يكفي لتغطية اليوم الثاني بالكامل. تحتاج على الأقل لـ ${requiredHours} ساعة و ${requiredMins} دقيقة.</span>`;
+        } else {
+            // إذا كان التصريح أكبر من أو يساوي شفت اليوم الثاني
+            const remainingPermitMins = permitTotalMins - day2CoverMins;
+            
+            if (remainingPermitMins >= singleShiftMins) {
+                 resultText.innerHTML = `<span class="highlight" style="color:#e74c3c;">عذراً، رصيد التصريح المدخل يغطي يومين بالكامل أو أكثر! لا داعي للحضور أساساً.</span>`;
+            } else {
+                const day1WorkMins = singleShiftMins - remainingPermitMins;
+                const exitTotalMins = startTotalMins + day1WorkMins;
+                const formattedExit = format12Hour(exitTotalMins);
+
+                const d1H = Math.floor(day1WorkMins / 60);
+                const d1M = day1WorkMins % 60;
+
+                resultText.innerHTML = `
+                    وقت الخروج في اليوم الأول: <span class="highlight">${formattedExit}</span><br>
+                    ساعات العمل في اليوم الأول: <span class="highlight">${d1H} ساعة و ${d1M} دقيقة</span><br>
+                    اليوم الثاني: <span class="highlight">بصم واطلع</span><br>
+                    ساعات العمل في اليوم الثاني: <span class="highlight">لا يوجد (مغطى بالتصريح)</span>
+                `;
+            }
         }
     }
 

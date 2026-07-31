@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - إدارة التأخيرات</title>
+    <!-- استدعاء مكتبات Firebase السحابية -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD10nYcvOM_5s8Hd-MFe2lTsRqkJ7TQ4vA",
+            authDomain: "my--permissions.firebaseapp.com",
+            projectId: "my--permissions",
+            storageBucket: "my--permissions.firebasestorage.app",
+            messagingSenderId: "476127156640",
+            appId: "1:476127156640:web:48f68b18dba796f1a2acc5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.updateDoc = updateDoc;
+
+        window.isFirebaseReady = true;
+        if (typeof window.startApp === 'function') {
+            window.startApp();
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 { color: #2c3e50; font-size: 18px; margin: 0; }
+        .back-btn, .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+        }
+        .back-btn { background-color: #2980b9; }
+        
+        .card-stats {
+            background-color: #fdebd0;
+            border: 1px solid #e67e22;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .card-stats h3 { margin: 0 0 5px 0; color: #d35400; font-size: 16px; }
+        .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; display: block; }
+        .card-stats small { font-size: 13px; color: #7f8c8d; margin-top: 5px; display: block; }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; }
+        select, input {
+            width: 100%;
+            padding: 9px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #f0f2f5;
+            text-align: right;
+        }
+        .note-text {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-top: 4px;
+            display: block;
+            text-align: right;
+        }
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .action-btn:hover { background-color: #d35400; }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th { background-color: #f4f7f6; color: #2c3e50; }
+        .edit-btn { background-color: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 4px; }
+        .delete-btn { background-color: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-flex">
+        <a href="home.html" class="back-btn">الرئيسية</a>
+        <h2>إدارة التأخيرات الشهرية</h2>
+        <button class="logout-btn" onclick="logout()">خروج</button>
+    </div>
+
+    <div class="card-stats">
+        <h3>رصيد التأخير المتبقي: <span id="remainingDelayDisplay">جاري التحميل...</span></h3>
+        <small>رصيد التصاريح العام المتبقي: <span id="remainingPermitsDisplay">جاري التحميل...</span></small>
+    </div>
+
+    <div class="form-group">
+        <label>فترة العمل (الشفت):</label>
+        <select id="shiftSelect" onchange="toggleCustomShift()">
+            <option value="07:15-15:15">الفترة الأولى (7:15 ص - 3:15 م)</option>
+            <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
+            <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
+            <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
+            <option value="custom">مخصص (تحديد يدوي)</option>
+        </select>
+    </div>
+
+    <div id="customShiftBox" style="display: none; margin-bottom: 15px;">
+        <div style="display: flex; gap: 10px; width: 100%;">
+            <div style="flex:1;"><label>بداية الشفت:</label><input type="time" id="customStart" value="22:00"></div>
+            <div style="flex:1;"><label>نهاية الشفت:</label><input type="time" id="customEnd" value="06:00"></div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>تاريخ التأخير:</label>
+        <input type="date" id="delayDateInput">
+    </div>
+
+    <div class="form-group">
+        <label>وقت الحضور الفعلي (وقت التأخير):</label>
+        <input type="time" id="actualArrivalTime">
+        <span class="note-text">أدخل الوقت الذي حضرت فيه متأخراً عن الشفت</span>
+    </div>
+
+    <button class="action-btn" onclick="addDelay()">حفظ وتطبيق التأخير</button>
+
+    <h3 style="margin-top: 25px; font-size: 15px; color: #2c3e50;">سجل التأخيرات لهذا الشهر</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>اليوم والتاريخ</th>
+                <th>ساعات التأخير</th>
+                <th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="delaysTableBody">
+        </tbody>
+    </table>
+</div>
+
+<script>
+if (localStorage.getItem('isLoggedIn') !== 'true') {
+    window.location.href = 'login.html';
+}
+
+let currentUsername = localStorage.getItem('currentUser') || 'defaultUser';
+document.getElementById('delayDateInput').valueAsDate = new Date();
+
+function logout() {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
+    window.location.href = 'login.html';
+}
+
+function toggleCustomShift() {
+    const val = document.getElementById('shiftSelect').value;
+    document.getElementById('customShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
+}
+
+// الرصيد الأساسي للتأخير 8 ساعات (480 دقيقة) والتصاريح 22 ساعة (1320 دقيقة) كحد أقصى افتراضي
+let remainingDelayMins = 480;
+let remainingTotalMins = 1320;
+let delaysList = [];
+let isDataLoaded = false;
+
+async function loadDataFromCloud() {
+    if (!window.db || !window.doc) {
+        setTimeout(loadDataFromCloud, 200);
+        return;
+    }
+
+    try {
+        const docRef = window.doc(window.db, "permitsData", currentUsername);
+        const docSnap = await window.getDoc(docRef);
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.savedMonth === currentMonth) {
+                remainingTotalMins = (data.remainingTotalMins !== undefined) ? Number(data.remainingTotalMins) : 1320;
+                remainingDelayMins = (data.remainingDelayMins !== undefined) ? Number(data.remainingDelayMins) : 480;
+                delaysList = data.delaysList || [];
+            } else {
+                // تصفير شهري جديد
+                remainingTotalMins = 1320;
+                remainingDelayMins = 480;
+                delaysList = [];
+                await window.setDoc(docRef, { 
+                    savedMonth: currentMonth, 
+                    remainingTotalMins, 
+                    remainingDelayMins,
+                    delaysList,
+                    permitsList: data.permitsList || []
+                }, { merge: true });
+            }
+        } else {
+            remainingTotalMins = 1320;
+            remainingDelayMins = 480;
+            delaysList = [];
+            await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, remainingDelayMins, delaysList }, { merge: true });
+        }
+        
+        isDataLoaded = true;
+        updateUI();
+    } catch (e) {
+        console.error("خطأ في جلب بيانات التأخير:", e);
+        if (!isDataLoaded) {
+            isDataLoaded = true;
+            updateUI();
+        }
+    }
+}
+
+async function saveDataToCloud() {
+    try {
+        if (!window.db || !window.doc) return;
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const docRef = window.doc(window.db, "permitsData", currentUsername);
+        await window.setDoc(docRef, {
+            savedMonth: currentMonth,
+            remainingTotalMins: Number(remainingTotalMins),
+            remainingDelayMins: Number(remainingDelayMins),
+            delaysList: delaysList
+        }, { merge: true });
+    } catch (e) {
+        console.error("خطأ في حفظ التأخير:", e);
+    }
+}
+
+function formatMinutesToReadable(totalMins) {
+    if (isNaN(totalMins) || totalMins <= 0) return "0 ساعة";
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    if (h > 0 && m > 0) return `${h} ساعة و ${m} دقيقة`;
+    if (h > 0) return `${h} ساعة`;
+    return `${m} دقيقة`;
+}
+
+function getShiftTimes() {
+    const shiftVal = document.getElementById('shiftSelect').value;
+    let start = "07:15", end = "15:15";
+    if(shiftVal !== 'custom') {
+        const parts = shiftVal.split('-');
+        start = parts[0]; end = parts[1];
+    } else {
+        start = document.getElementById('customStart').value || "22:00";
+        end = document.getElementById('customEnd').value || "06:00";
+    }
+    return { start, end };
+}
+
+function formatTime12h(timeStr) {
+    if (!timeStr) return '';
+    let [h, m] = timeStr.split(':').map(Number);
+    let period = 'ص';
+    if (h >= 12) {
+        period = 'م';
+        if (h > 12) h -= 12;
+    }
+    if (h === 0) h = 12;
+    return `${h}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+function updateUI() {
+    if (isNaN(remainingDelayMins) || remainingDelayMins > 480) remainingDelayMins = 480;
+    if (remainingDelayMins < 0) remainingDelayMins = 0;
+    if (isNaN(remainingTotalMins)) remainingTotalMins = 1320;
+
+    document.getElementById('remainingDelayDisplay').innerText = formatMinutesToReadable(remainingDelayMins);
+    document.getElementById('remainingPermitsDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
+
+    const tbody = document.getElementById('delaysTableBody');
+    tbody.innerHTML = '';
+    delaysList.forEach((d, index) => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${d.date}</td>
+                <td>${formatMinutesToReadable(d.totalMins)}</td>
+                <td>
+                    <button class="edit-btn" onclick="editDelay(${index})">✏️</button>
+                    <button class="delete-btn" onclick="deleteDelay(${index})">🗑️</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+window.addDelay = async function() {
+    const arrivalTime = document.getElementById('actualArrivalTime').value;
+    const selectedDate = document.getElementById('delayDateInput').value;
+
+    if (!arrivalTime) {
+        alert('الرجاء إدخال وقت الحضور الفعلي!');
+        return;
+    }
+
+    const times = getShiftTimes();
+    const [startH, startM] = times.start.split(':').map(Number);
+    const [arrH, arrM] = arrivalTime.split(':').map(Number);
+
+    let startTotalMins = startH * 60 + startM;
+    let arrTotalMins = arrH * 60 + arrM;
+
+    // التعامل مع الشفتات الليلية إذا كان الحضور في اليوم التالي المبكر
+    if (arrTotalMins < startTotalMins && (startTotalMins > 720)) {
+        // إذا بدأ الشفت متأخراً ليلاً (مثل 10 م) وتم الحضور بعد منتصف الليل
+        arrTotalMins += 24 * 60;
+    }
+
+    let delayMins = arrTotalMins - startTotalMins;
+
+    if (delayMins <= 0) {
+        alert('وقت الحضور المدخل يوافق بداية الشفت أو قبله (لا يوجد تأخير)!');
+        return;
+    }
+
+    if (delayMins > remainingDelayMins) {
+        alert(`❌ ساعات التأخير المتبقية لا تكفي!\nرصيدك المتبقي للتأخير هو ${formatMinutesToReadable(remainingDelayMins)} فقط.`);
+        return;
+    }
+
+    // الخصم من رصيد التأخير ورصيد التصاريح معاً
+    remainingDelayMins -= delayMins;
+    remainingTotalMins -= delayMins;
+
+    let dateStr = selectedDate;
+    if (selectedDate) {
+        const dObj = new Date(selectedDate);
+        dateStr = dObj.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
+    }
+    const finalRecordStr = dateStr + ' - حضور: ' + formatTime12h(arrivalTime);
+
+    delaysList.push({ date: finalRecordStr, totalMins: delayMins });
+    document.getElementById('actualArrivalTime').value = '';
+
+    updateUI();
+    await saveDataToCloud();
+    alert('تم تسجيل التأخير وخصمه بنجاح من رصيد التأخير والتصاريح!');
+}
+
+window.editDelay = async function(index) {
+    const oldMins = delaysList[index].totalMins;
+    const newArrivalInput = prompt('أدخل وقت الحضور الفعلي الجديد (مثال 23:30):');
+    if (!newArrivalInput) return;
+
+    const times = getShiftTimes();
+    const [startH, startM] = times.start.split(':').map(Number);
+    const [arrH, arrM] = newArrivalInput.split(':').map(Number);
+
+    let startTotalMins = startH * 60 + startM;
+    let arrTotalMins = arrH * 60 + arrM;
+    if (arrTotalMins < startTotalMins && startTotalMins > 720) arrTotalMins += 24 * 60;
+
+    let newTotalMins = arrTotalMins - startTotalMins;
+    if (newTotalMins <= 0) return alert('وقت الحضور غير صالح (لا يوجد تأخير)');
+
+    const diffMins = newTotalMins - oldMins;
+    if (diffMins > remainingDelayMins) return alert('رصيد التأخير المتبقي لا يكفي لهذا التعديل!');
+
+    remainingDelayMins -= diffMins;
+    remainingTotalMins -= diffMins;
+    delaysList[index].totalMins = newTotalMins;
+
+    updateUI();
+    await saveDataToCloud();
+}
+
+window.deleteDelay = async function(index) {
+    if (confirm('هل أنت متأكد من حذف سجل التأخير هذا؟ (ستعود الدقائق لرصيد التأخير والتصاريح)')) {
+        const restoredMins = Number(delaysList[index].totalMins);
+        remainingDelayMins = Number(remainingDelayMins) + restoredMins;
+        remainingTotalMins = Number(remainingTotalMins) + restoredMins;
+
+        if (remainingDelayMins > 480) remainingDelayMins = 480;
+        if (remainingTotalMins > 1320) remainingTotalMins = 1320;
+
+        delaysList.splice(index, 1);
+        updateUI();
+        await saveDataToCloud();
+    }
+}
+
+window.startApp = function() {
+    loadDataFromCloud();
+};
+
+if (window.isFirebaseReady) {
+    window.startApp();
+}
+</script>
+
+</body>
+</html>

@@ -495,25 +495,45 @@ window.addPermit = async function() {
     if (selHours === 0 && selMins === 0 && exitTime) {
         const times = getShiftTimes();
         const [startH, startM] = times.start.split(':').map(Number);
+        const [endH, endM] = times.end.split(':').map(Number);
         const [exitH, exitM] = exitTime.split(':').map(Number);
         
         let startTotalMins = startH * 60 + startM;
+        let endTotalMins = endH * 60 + endM;
         let exitTotalMins = exitH * 60 + exitM;
+
+        if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
         if (exitTotalMins < startTotalMins) exitTotalMins += 24 * 60;
         
-        permitMins = exitTotalMins - startTotalMins;
-        if (permitMins <= 0) {
-            alert('وقت الخروج المدخل يسبق بداية الشفت!');
+        if (exitTotalMins > endTotalMins) {
+            alert('وقت الخروج المدخل يتجاوز وقت نهاية الشفت!');
             return;
         }
+        
+        permitMins = endTotalMins - exitTotalMins;
+        
+        if (permitMins <= 0) {
+            alert('وقت الخروج يساوي نهاية الشفت (لا يوجد استئذان)!');
+            return;
+        }
+        
         recordedExitTimeStr = formatTime12h(exitTime);
     } else {
         permitMins = (selHours * 60) + selMins;
         const times = getShiftTimes();
         const [startH, startM] = times.start.split(':').map(Number);
-        let calculatedExitMins = (startH * 60 + startM + permitMins) % (24 * 60);
-        let exH = Math.floor(calculatedExitMins / 60);
-        let exM = calculatedExitMins % 60;
+        const [endH, endM] = times.end.split(':').map(Number);
+        
+        let startTotalMins = startH * 60 + startM;
+        let endTotalMins = endH * 60 + endM;
+        if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
+        
+        // حساب وقت الخروج بطرح مدة الاستئذان من وقت نهاية الشفت
+        let exitTotalMins = endTotalMins - permitMins;
+        if (exitTotalMins < 0) exitTotalMins += 24 * 60;
+        
+        let exH = Math.floor(exitTotalMins / 60) % 24;
+        let exM = exitTotalMins % 60;
         recordedExitTimeStr = formatTime12h(`${String(exH).padStart(2,'0')}:${String(exM).padStart(2,'0')}`);
     }
 

@@ -10,10 +10,10 @@
         import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyD10nYcVOM_5s8Hd-...",
-            authDomain: "my---permissions.firebaseapp.com",
-            projectId: "my---permissions",
-            storageBucket: "my---permissions.firebasestorage.app",
+            apiKey: "AIzaSyD10nYcvOM_5s8Hd-MFe2lTsRqkJ7TQ4vA",
+            authDomain: "my--permissions.firebaseapp.com",
+            projectId: "my--permissions",
+            storageBucket: "my--permissions.firebasestorage.app",
             messagingSenderId: "476127156640",
             appId: "1:476127156640:web:48f68b18dba796f1a2acc5"
         };
@@ -328,7 +328,6 @@ let permitsList = [];
 let isDataLoaded = false;
 
 async function loadDataFromCloud() {
-    // التأكد التام من جاهزية فايربيس وإلا الانتظار قليلاً
     if (!window.db || !window.doc) {
         setTimeout(loadDataFromCloud, 200);
         return;
@@ -632,7 +631,6 @@ window.deletePermit = async function(index) {
     }
 }
 
-// دالة البدء الذكية التي تنتظر تحميل فايربيس
 window.startApp = function() {
     loadDataFromCloud();
 };

@@ -125,6 +125,7 @@ function renderHome() {
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
     renderHome(); // إعادة تحديث الصفحة فوراً لتتعدل الواجهة
 }
 

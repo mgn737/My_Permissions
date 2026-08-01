@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حاسبة وقت الخروج - الرئيسية</title>
+    <title>الرئيسية - النظام</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,7 +13,32 @@
             padding: 20px;
             display: flex;
             justify-content: center;
+            align-items: center;
+            min-height: 90vh;
         }
+        
+        /* تصميم شاشة التحميل */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .spinner {
+            border: 4px solid rgba(0,0,0,0.1);
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            border-left-color: #27ae60;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* تصميم الحاوية الرئيسية */
         .container {
             background-color: #fff;
             padding: 25px;
@@ -21,7 +46,9 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 500px;
+            display: none; /* مخفية حتى ينتهي التحميل */
         }
+        
         .header-flex {
             display: flex;
             justify-content: space-between;
@@ -31,20 +58,48 @@
             margin-bottom: 20px;
         }
         h2 { color: #2c3e50; font-size: 18px; margin: 0; }
+        
         .login-btn {
             background-color: #27ae60;
             color: white;
             border: none;
-            padding: 6px 14px;
+            padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             text-decoration: none;
             font-weight: bold;
         }
         .login-btn:hover { background-color: #219653; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; }
+        .back-btn {
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+        
+        /* أزرار وحقول الحاسبة */
+        .main-menu-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .main-menu-btn:hover { background-color: #2980b9; }
+
+        .form-group { margin-bottom: 15px; text-align: right; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
         select, input {
             width: 100%;
             padding: 9px;
@@ -53,7 +108,6 @@
             border-radius: 6px;
             box-sizing: border-box;
             background-color: #f0f2f5;
-            text-align: right;
         }
         .action-btn {
             width: 100%;
@@ -68,6 +122,7 @@
             margin-top: 5px;
         }
         .action-btn:hover { background-color: #d35400; }
+        
         .result-box {
             background-color: #fef9e7;
             border: 1px solid #f39c12;
@@ -82,59 +137,105 @@
 </head>
 <body>
 
-<div class="container">
+<!-- شاشة التحميل -->
+<div id="loader">
+    <div class="spinner"></div>
+    <h3 style="color: #2c3e50;">جاري التحميل...</h3>
+</div>
+
+<!-- المحتوى الرئيسي (يظهر بعد التحميل) -->
+<div class="container" id="mainContent">
+    
     <div class="header-flex">
-        <a href="login.html" class="login-btn">تسجيل الدخول</a>
-        <h2>حاسبة وقت الخروج المتاحة</h2>
+        <a href="login.html" class="login-btn" id="authBtn">تسجيل الدخول</a>
+        <h2 id="pageTitle">الرئيسية</h2>
     </div>
 
-    <div class="form-group">
-        <label>تاريخ البدء:</label>
-        <input type="date" id="calcDateInput">
+    <!-- قائمة الزوار (الواجهة الأولى) -->
+    <div id="menuView">
+        <p style="text-align: center; color: #7f8c8d; font-size: 14px;">مرحباً بك في نظام إدارة التصاريح. الرجاء تسجيل الدخول للوصول للخدمات، أو استخدام الحاسبة للزوار.</p>
+        <button class="main-menu-btn" onclick="showCalculator()">🧮 حاسبة وقت الخروج المتاحة</button>
     </div>
 
-    <div class="form-group">
-        <label>فترة العمل (الشفت):</label>
-        <select id="calcShiftSelect" onchange="toggleCalcCustomShift()">
-            <option value="07:15-15:15">الفترة الأولى (7:15 ص - 3:15 م)</option>
-            <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
-            <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
-            <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
-            <option value="custom">مخصص (تحديد يدوي)</option>
-        </select>
-    </div>
+    <!-- واجهة الحاسبة (تظهر عند الضغط على الزر) -->
+    <div id="calculatorView" style="display: none;">
+        <button class="back-btn" onclick="showMenu()">🔙 رجوع للقائمة</button>
+        
+        <div class="form-group">
+            <label>تاريخ البدء:</label>
+            <input type="date" id="calcDateInput">
+        </div>
 
-    <div id="calcCustomShiftBox" style="display: none; margin-bottom: 15px;">
-        <div style="display: flex; gap: 10px; width: 100%;">
-            <div style="flex:1;"><label>بداية:</label><input type="time" id="calcCustomStart" value="07:15"></div>
-            <div style="flex:1;"><label>نهاية:</label><input type="time" id="calcCustomEnd" value="15:15"></div>
+        <div class="form-group">
+            <label>فترة العمل (الشفت):</label>
+            <select id="calcShiftSelect" onchange="toggleCalcCustomShift()">
+                <option value="07:15-15:15">الفترة الأولى (7:15 ص - 3:15 م)</option>
+                <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
+                <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
+                <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
+                <option value="custom">مخصص (تحديد يدوي)</option>
+            </select>
+        </div>
+
+        <div id="calcCustomShiftBox" style="display: none; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <div style="flex:1;"><label>بداية:</label><input type="time" id="calcCustomStart" value="07:15"></div>
+                <div style="flex:1;"><label>نهاية:</label><input type="time" id="calcCustomEnd" value="15:15"></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>الرصيد المراد حسابه:</label>
+            <select id="inputHours">
+                <option value="8">8 ساعات (رصيد التأخير)</option>
+                <option value="22" selected>22 ساعة (رصيد التصاريح كامل)</option>
+            </select>
+        </div>
+
+        <button class="action-btn" onclick="calculateInfo()">احسب وقت الخروج</button>
+
+        <div id="calcResultBox" class="result-box">
+            <p id="resText1"></p>
+            <p id="resText2"></p>
         </div>
     </div>
 
-    <div class="form-group">
-        <label>الرصيد المراد حسابه:</label>
-        <select id="inputHours">
-            <option value="8">8 ساعات (رصيد التأخير)</option>
-            <option value="22" selected>22 ساعة (رصيد التصاريح كامل)</option>
-        </select>
-    </div>
-
-    <button class="action-btn" onclick="calculateInfo()">احسب وقت الخروج</button>
-
-    <div id="calcResultBox" class="result-box">
-        <p id="resText1"></p>
-        <p id="resText2"></p>
-    </div>
 </div>
 
 <script>
+// إعداد التاريخ الافتراضي لليوم
 document.getElementById('calcDateInput').valueAsDate = new Date();
 
-// إذا كان المستخدم مسجلاً دخوله مسبقاً، نوجهه مباشرة إلى لوحة التحكم الخاصة به
-if (localStorage.getItem('isLoggedIn') === 'true') {
-    window.location.href = 'home.html';
+// التعامل مع شاشة التحميل والتوجيه
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        // إخفاء شاشة التحميل بعد ثانيتين وإظهار المحتوى
+        document.getElementById('loader').style.display = 'none';
+        
+        // التحقق: إذا كان مسجل دخوله مسبقاً، وجهه فوراً للوحة التحكم
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            window.location.href = 'home.html';
+        } else {
+            // إذا لم يكن مسجل دخول، أظهر له الشاشة الرئيسية للزوار
+            document.getElementById('mainContent').style.display = 'block';
+        }
+    }, 2000); // 2000 ملي ثانية = ثانيتين
+});
+
+// دوال التنقل بين الواجهات
+function showCalculator() {
+    document.getElementById('menuView').style.display = 'none';
+    document.getElementById('calculatorView').style.display = 'block';
+    document.getElementById('pageTitle').innerText = 'حاسبة وقت الخروج';
 }
 
+function showMenu() {
+    document.getElementById('calculatorView').style.display = 'none';
+    document.getElementById('menuView').style.display = 'block';
+    document.getElementById('pageTitle').innerText = 'الرئيسية';
+}
+
+// دوال الحاسبة
 function toggleCalcCustomShift() {
     const val = document.getElementById('calcShiftSelect').value;
     document.getElementById('calcCustomShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';

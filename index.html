@@ -29,12 +29,12 @@
             z-index: 9999;
         }
         .loader-logo {
-            width: 350px; /* تم تكبير حجم الصورة هنا */
-            max-width: 80%; /* لضمان عدم تجاوزها حجم الشاشة في الجوالات */
+            width: 250px;
+            max-width: 80%;
             height: auto;
             margin-bottom: 20px;
-            border-radius: 15px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            /* هذا السطر يدمج خلفية الصورة مع لون الموقع ويخفي المربع */
+            mix-blend-mode: multiply;
         }
         .spinner {
             border: 4px solid rgba(0,0,0,0.1);
@@ -160,7 +160,7 @@
 
 <!-- شاشة التحميل مع الصورة المخصصة -->
 <div id="loader">
-    <!-- الصورة الجديدة -->
+    <!-- الصورة الخاصة بك -->
     <img src="IMG_3978.png" alt="شعار النظام" class="loader-logo" onerror="this.style.display='none'">
     
     <div class="spinner"></div>

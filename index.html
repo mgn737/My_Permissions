@@ -43,7 +43,7 @@
         }
         .action-btn:hover { background-color: #2980b9; }
         
-        /* تنسيق شاشة التحميل */
+        /* تنسيق شاشة التحميل والصورة بعرض 350 */
         #loader {
             position: fixed;
             top: 0;
@@ -58,11 +58,11 @@
             z-index: 9999;
         }
         .loader-img {
-            width: 80px; /* يمكنك تعديل حجم الصورة هنا */
-            height: 80px;
+            width: 350px;
+            max-width: 90%;
+            height: auto;
             object-fit: contain;
             margin-bottom: 15px;
-            border-radius: 50%; /* إذا أردت أن تكون دائرية */
         }
         .spinner {
             border: 4px solid #f3f3f3;
@@ -81,10 +81,9 @@
 </head>
 <body>
 
-    <!-- شاشة التحميل مع الصورة -->
+    <!-- شاشة التحميل مع الصورة المحددة -->
     <div id="loader">
-        <!-- ضع رابط صورتك أو اسم ملفها هنا في خاصية src -->
-        <img src="path_to_your_image.png" alt="شعار التحميل" class="loader-img">
+        <img src="IMG_4061.png" alt="شاشة التحميل" class="loader-img">
         <div class="spinner"></div>
         <p>جاري التحميل...</p>
     </div>

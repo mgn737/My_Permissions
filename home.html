@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم الرئيسية</title>
     <style>
-        /* المتغيرات الأساسية (الوضع النهاري) */
         :root {
             --bg-color: #f4f7f6;
             --text-color: #333;
@@ -13,12 +12,11 @@
             --title-color: #2c3e50;
         }
 
-        /* المتغيرات للوضع الليلي */
         .dark-mode {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --card-bg: #1e1e1e;
-            --title-color: #e0e0e0;
+            --bg-color: #0f172a;
+            --text-color: #e2e8f0;
+            --card-bg: #1e293b;
+            --title-color: #f8fafc;
         }
 
         body {
@@ -45,20 +43,23 @@
             transition: background-color 0.3s;
         }
         
-        /* زر الوضع الليلي العلوي */
-        .theme-btn {
+        .theme-icon-btn {
             position: absolute;
             top: 20px;
             left: 20px;
-            background-color: #f39c12;
-            color: white;
+            background: none;
             border: none;
-            padding: 5px 10px;
-            border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-            transition: 0.3s;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        .theme-icon-btn:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+        .dark-mode .theme-icon-btn:hover {
+            background-color: rgba(255,255,255,0.1);
         }
 
         h2 { color: var(--title-color); margin-bottom: 25px; transition: color 0.3s; }
@@ -93,7 +94,6 @@
 </head>
 <body>
 
-<!-- سكريبت لمنع وميض الشاشة البيضاء عند التحميل إذا كان الوضع الليلي مفعل -->
 <script>
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
@@ -101,7 +101,7 @@
 </script>
 
 <div class="container">
-    <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()">🌙 ليلي</button>
+    <button id="themeToggleBtn" class="theme-icon-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
     
     <h2>لوحة التحكم والخدمات</h2>
     
@@ -117,8 +117,7 @@ function initThemeBtn() {
     const isDark = document.body.classList.contains('dark-mode');
     const btn = document.getElementById('themeToggleBtn');
     if (btn) {
-        btn.innerHTML = isDark ? '☀️ نهاري' : '🌙 ليلي';
-        btn.style.backgroundColor = isDark ? '#2c3e50' : '#f39c12';
+        btn.innerHTML = isDark ? '☀️' : '🌙';
     }
 }
 

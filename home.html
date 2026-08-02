@@ -45,6 +45,8 @@
         .action-btn:hover { background-color: #2980b9; }
         .btn-delay { background-color: #e67e22; }
         .btn-delay:hover { background-color: #d35400; }
+        .btn-vacation { background-color: #9b59b6; }
+        .btn-vacation:hover { background-color: #8e44ad; }
         .logout-btn {
             background-color: #e74c3c;
             margin-top: 25px;
@@ -59,12 +61,12 @@
     
     <a href="dashboard.html" class="action-btn">إدارة التصاريح الشهرية</a>
     <a href="delay.html" class="action-btn btn-delay">إدارة التأخير وسجلاته</a>
+    <a href="vacations.html" class="action-btn btn-vacation">إدارة الإجازات</a>
     
     <button class="action-btn logout-btn" onclick="logout()">تسجيل الخروج</button>
 </div>
 
 <script>
-// حماية الصفحة: إذا لم يكن مسجلاً دخوله، يُطرد إلى صفحة الدخول
 if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html';
 }

@@ -64,12 +64,7 @@
             background-color: #f0f2f5; 
             font-family: inherit;
             font-size: 14px;
-            -webkit-appearance: none; 
-            appearance: none;
         }
-
-        .hijri-selectors { display: flex; gap: 8px; }
-        .hijri-selectors select { flex: 1; }
 
         .date-display-box {
             background-color: #e8f6f3;
@@ -132,31 +127,12 @@
 
     <div class="form-section" id="leaveForm">
         <div class="form-group">
-            <label>تاريخ بداية الإجازة (هجري):</label>
-            <div class="hijri-selectors">
-                <select id="hijriDay" onchange="convertHijriToGregorian()"></select>
-                <select id="hijriMonth" onchange="convertHijriToGregorian()">
-                    <option value="1">محرم</option>
-                    <option value="2">صفر</option>
-                    <option value="3">ربيع الأول</option>
-                    <option value="4">ربيع الآخر</option>
-                    <option value="5">جمادى الأولى</option>
-                    <option value="6">جمادى الآخرة</option>
-                    <option value="7">رجب</option>
-                    <option value="8">شعبان</option>
-                    <option value="9">رمضان</option>
-                    <option value="10">شوال</option>
-                    <option value="11">ذو القعدة</option>
-                    <option value="12">ذو الحجة</option>
-                </select>
-                <select id="hijriYear" onchange="convertHijriToGregorian()">
-                    <option value="1447">1447 هـ</option>
-                    <option value="1448" selected>1448 هـ</option>
-                    <option value="1449">1449 هـ</option>
-                </select>
-            </div>
-            <!-- مربع عرض التاريخ الميلادي المقابل تحت -->
-            <div id="dualDateDisplay" class="date-display-box"></div>
+            <label>تاريخ بداية الإجازة:</label>
+            <!-- استخدام تقويم الجوال الأصلي المدمج -->
+            <input type="date" id="leaveDateInput" onchange="updateDualDateDisplay()">
+            
+            <!-- مربع عرض التاريخين معاً بشكل متناسق بعد الاختيار -->
+            <div id="dualDateDisplay" class="date-display-box">اختر التاريخ من التقويم أعلاه</div>
         </div>
         <div class="form-group">
             <label>عدد أيام الإجازة (1 - 100):</label>
@@ -196,16 +172,7 @@
     let lastScatRenewYear = 0;
     let leavesHistory = [];
     let isDataLoaded = false;
-    let selectedGregorianDateObj = null;
-
-    // تعبئة أيام الشهر الهجري (1 إلى 30)
-    const hDaySelect = document.getElementById('hijriDay');
-    for (let i = 1; i <= 30; i++) {
-        let opt = document.createElement('option');
-        opt.value = i;
-        opt.innerText = i + ' يوم';
-        hDaySelect.appendChild(opt);
-    }
+    let selectedDateObj = null;
 
     // تعبئة قائمة الأيام للاجازة
     const daysSelect = document.getElementById('leaveDays');
@@ -216,46 +183,37 @@
         daysSelect.appendChild(opt);
     }
 
-    // تعبئة تاريخ اليوم هجرياً بشكل افتراضي دقيق
-    function setInitialHijriDate() {
+    // تعبئة تاريخ اليوم كافتراضي في الحقل
+    function setInitialDate() {
         const today = new Date();
-        const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', { year: 'numeric', month: 'numeric', day: 'numeric' });
-        const parts = formatter.formatToParts(today);
-        let hY = 1448, hM = 3, hD = 1;
-        parts.forEach(p => {
-            if (p.type === 'year') hY = parseInt(p.value);
-            if (p.type === 'month') hM = parseInt(p.value);
-            if (p.type === 'day') hD = parseInt(p.value);
-        });
-        
-        document.getElementById('hijriYear').value = hY;
-        document.getElementById('hijriMonth').value = hM;
-        document.getElementById('hijriDay').value = hD;
-        convertHijriToGregorian();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        document.getElementById('leaveDateInput').value = `${year}-${month}-${day}`;
+        updateDualDateDisplay();
     }
 
-    // معادلة دقيقة لتحويل التاريخ الهجري المختار إلى تاريخ ميلادي حقيقي يعرض في المربع السفلي
-    function convertHijriToGregorian() {
-        const d = parseInt(document.getElementById('hijriDay').value);
-        const m = parseInt(document.getElementById('hijriMonth').value);
-        const y = parseInt(document.getElementById('hijriYear').value);
+    // تحديث وتنسيق عرض التاريخين (الميلادي والهجري معاً)
+    function updateDualDateDisplay() {
+        const inputVal = document.getElementById('leaveDateInput').value;
+        if (!inputVal) return;
 
-        // حساب تقريبي لفارق الأيام بين الهجري والميلادي لتقويم أم القرى
-        let approxDays = (y - 1445) * 354.36 + (m - 1) * 29.5 + d;
-        let baseDate = new Date(2023, 6, 19); // 1 محرم 1445 هـ يوافق 19 يوليو 2023 م
-        baseDate.setDate(baseDate.getDate() + Math.round(approxDays) - 1);
+        selectedDateObj = new Date(inputVal);
 
-        selectedGregorianDateObj = baseDate;
+        const gFormatter = new Intl.DateTimeFormat('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+        const hFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { year: 'numeric', month: 'long', day: 'numeric' });
 
-        const gFormatter = new Intl.DateTimeFormat('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' });
-        
+        const gFormatted = gFormatter.format(selectedDateObj);
+        const hFormatted = hFormatter.format(selectedDateObj);
+
         const displayBox = document.getElementById('dualDateDisplay');
         displayBox.innerHTML = `
-            📅 <b>الميلادي المقابل:</b> ${gFormatter.format(selectedGregorianDateObj)}
+            📅 <b>الميلادي:</b> ${gFormatted}<br>
+            🌙 <b>الهجري:</b> ${hFormatted}
         `;
     }
 
-    setInitialHijriDate();
+    setInitialDate();
 
     async function loadDataFromCloud() {
         if (!window.db || !window.doc) {
@@ -360,7 +318,7 @@
     window.submitLeave = async function() {
         const daysCount = parseInt(document.getElementById('leaveDays').value);
         
-        if (!selectedGregorianDateObj || daysCount < 1) return alert("الرجاء تحديد تاريخ صحيح.");
+        if (!selectedDateObj || daysCount < 1) return alert("الرجاء تحديد تاريخ صحيح.");
 
         if (daysCount >= 1 && daysCount <= 4) {
             if (daysCount > scatBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأيام المتفرقة (${scatBalance} يوم متاح).`);
@@ -373,21 +331,19 @@
         }
 
         const daysAr = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-        const dayName = daysAr[selectedGregorianDateObj.getDay()];
+        const dayName = daysAr[selectedDateObj.getDay()];
         
-        const returnDateObj = new Date(selectedGregorianDateObj);
+        const returnDateObj = new Date(selectedDateObj);
         returnDateObj.setDate(returnDateObj.getDate() + daysCount); 
         const returnDateStr = returnDateObj.toISOString().split('T')[0];
 
-        const hDay = document.getElementById('hijriDay').value;
-        const hMonthText = document.getElementById('hijriMonth').options[document.getElementById('hijriMonth').selectedIndex].text;
-        const hYear = document.getElementById('hijriYear').value;
-        const hijriFormatted = `${hDay} ${hMonthText} ${hYear} هـ`;
+        const gFormatter = new Intl.DateTimeFormat('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        const hFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { year: 'numeric', month: 'long', day: 'numeric' });
 
-        const gregorianFormatted = new Intl.DateTimeFormat('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(selectedGregorianDateObj);
+        const dateCombinedStr = `${hFormatter.format(selectedDateObj)}<br><small style="color:#7f8c8d;">${gFormatter.format(selectedDateObj)} م</small>`;
 
         leavesHistory.push({
-            startDate: `${hijriFormatted}<br><small style="color:#7f8c8d;">${gregorianFormatted} م</small>`,
+            startDate: dateCombinedStr,
             dayName: dayName,
             daysCount: daysCount,
             returnDate: returnDateStr

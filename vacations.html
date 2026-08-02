@@ -53,7 +53,34 @@
         .form-section, .settings-section { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; margin-bottom: 20px; border: 2px solid #3498db; }
         .form-group { margin-bottom: 15px; text-align: right; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; background-color: #f0f2f5; }
+        
+        /* تعديل CSS هنا لحل مشكلة خروج المربع في الجوال */
+        .form-group input, .form-group select { 
+            width: 100%; 
+            max-width: 100%;
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            box-sizing: border-box; /* تمنع التمدد خارج الحاوية */
+            background-color: #f0f2f5; 
+            font-family: inherit;
+            font-size: 14px;
+            -webkit-appearance: none; /* مهم جداً لأجهزة الآيفون */
+            appearance: none;
+        }
+
+        /* تنسيق مربع عرض التاريخ الهجري والميلادي */
+        .date-display-box {
+            background-color: #e8f6f3;
+            border: 1px dashed #1abc9c;
+            color: #16a085;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 13px;
+            text-align: center;
+            line-height: 1.6;
+        }
         
         .flex-btns { display: flex; gap: 10px; }
         .btn-submit { background-color: #27ae60; flex: 1; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; }
@@ -105,7 +132,9 @@
     <div class="form-section" id="leaveForm">
         <div class="form-group">
             <label>تاريخ بداية الإجازة:</label>
-            <input type="date" id="leaveDate">
+            <input type="date" id="leaveDate" onchange="updateDateDisplay()">
+            <!-- مربع عرض التاريخ المزدوج -->
+            <div id="dualDateDisplay" class="date-display-box" style="display: none;"></div>
         </div>
         <div class="form-group">
             <label>عدد أيام الإجازة (1 - 100):</label>
@@ -137,8 +166,11 @@
     }
 
     const currentUsername = localStorage.getItem('currentUser') || 'defaultUser';
-    document.getElementById('leaveDate').valueAsDate = new Date();
-
+    const leaveDateInput = document.getElementById('leaveDate');
+    
+    // تعيين تاريخ اليوم افتراضياً وتحديث العرض
+    leaveDateInput.valueAsDate = new Date();
+    
     let mainBalance = 36;
     let scatBalance = 10;
     let renewSettings = { day: 1, month: 1 };
@@ -155,6 +187,29 @@
         opt.innerText = i + (i === 1 ? ' يوم' : ' أيام');
         daysSelect.appendChild(opt);
     }
+
+    // دالة تحويل وعرض التاريخ بالهجري والميلادي
+    function updateDateDisplay() {
+        const dateVal = leaveDateInput.value;
+        const displayBox = document.getElementById('dualDateDisplay');
+        
+        if(dateVal) {
+            const gDate = new Date(dateVal);
+            const hijriFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day: 'numeric', month: 'long', year: 'numeric' });
+            const gregorianFormatter = new Intl.DateTimeFormat('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' });
+            
+            displayBox.style.display = 'block';
+            displayBox.innerHTML = `
+                📅 <b>الميلادي:</b> ${gregorianFormatter.format(gDate)} <br>
+                🌙 <b>الهجري:</b> ${hijriFormatter.format(gDate)}
+            `;
+        } else {
+            displayBox.style.display = 'none';
+        }
+    }
+
+    // استدعاء الدالة فور تحميل الصفحة لعرض تاريخ اليوم
+    updateDateDisplay();
 
     // تحميل البيانات من Firebase
     async function loadDataFromCloud() {
@@ -180,7 +235,7 @@
             }
 
             isDataLoaded = true;
-            checkRenewals(); // التحقق من التجديد السنوي
+            checkRenewals(); 
         } catch (e) {
             console.error("خطأ في جلب بيانات الإجازات:", e);
         }
@@ -204,7 +259,6 @@
         }
     }
 
-    // جلب التاريخ الهجري
     function getTodayHijri() {
         const today = new Date();
         const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', { year: 'numeric', month: 'numeric', day: 'numeric' });
@@ -214,12 +268,10 @@
         return hijri;
     }
 
-    // التجديد التلقائي
     async function checkRenewals() {
         const hDate = getTodayHijri();
         let changed = false;
         
-        // تجديد المتفرقة (1/1 هجري)
         if (lastScatRenewYear === 0) { lastScatRenewYear = hDate.year; changed = true; }
         if (hDate.year > lastScatRenewYear) {
             scatBalance = 10;
@@ -227,7 +279,6 @@
             changed = true;
         }
 
-        // تجديد الأساسي بناءً على الإعدادات
         if (lastMainRenewYear === 0) { lastMainRenewYear = hDate.year; changed = true; }
         if (hDate.year > lastMainRenewYear) {
             if (hDate.month > renewSettings.month || (hDate.month === renewSettings.month && hDate.day >= renewSettings.day)) {
@@ -262,14 +313,12 @@
         });
     }
 
-    // دالة رفع الإجازة والشروط
     window.submitLeave = async function() {
         const dateInput = document.getElementById('leaveDate').value;
         const daysCount = parseInt(document.getElementById('leaveDays').value);
         
         if (!dateInput || daysCount < 1) return alert("الرجاء تحديد تاريخ صحيح.");
 
-        // تطبيق شروط الخصم
         if (daysCount >= 1 && daysCount <= 4) {
             if (daysCount > scatBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأيام المتفرقة (${scatBalance} يوم متاح).`);
             if (daysCount > mainBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأساسي (${mainBalance} يوم متاح).`);
@@ -288,8 +337,12 @@
         returnDateObj.setDate(returnDateObj.getDate() + daysCount); 
         const returnDateStr = returnDateObj.toISOString().split('T')[0];
 
+        // حفظ التاريخ بشكل منسق في الجدول ليكون واضحاً
+        const gregorianFmt = new Intl.DateTimeFormat('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(startDateObj);
+        const hijriFmt = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(startDateObj);
+
         leavesHistory.push({
-            startDate: dateInput,
+            startDate: `${gregorianFmt}<br><small style="color:#7f8c8d;">${hijriFmt} هـ</small>`,
             dayName: dayName,
             daysCount: daysCount,
             returnDate: returnDateStr

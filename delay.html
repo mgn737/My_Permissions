@@ -52,22 +52,22 @@
             --table-border: #ddd;
         }
 
-        /* المتغيرات للوضع الليلي */
+        /* المتغيرات للوضع الليلي (أزرق ليلي) */
         .dark-mode {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --card-bg: #1e1e1e;
-            --border-color: #333;
-            --input-bg: #2c2c2c;
-            --input-border: #444;
-            --title-color: #e0e0e0;
-            --stats-bg: #3d220b;
+            --bg-color: #0f172a;
+            --text-color: #e2e8f0;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+            --input-border: #475569;
+            --title-color: #f8fafc;
+            --stats-bg: #332311;
             --stats-border: #d35400;
-            --stats-title: #f39c12;
-            --stats-num: #e0e0e0;
-            --stats-small: #aaa;
-            --table-th-bg: #2c2c2c;
-            --table-border: #444;
+            --stats-title: #fb923c;
+            --stats-num: #f8fafc;
+            --stats-small: #94a3b8;
+            --table-th-bg: #0f172a;
+            --table-border: #334155;
         }
 
         body {
@@ -189,7 +189,6 @@
 </head>
 <body>
 
-<!-- سكريبت لمنع وميض الشاشة البيضاء عند التحميل إذا كان الوضع الليلي مفعل -->
 <script>
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
@@ -257,13 +256,12 @@
 </div>
 
 <script>
-// إعداد وتشغيل زر وزر تفعيل الوضع الليلي/النهاري
 function initThemeBtn() {
     const isDark = document.body.classList.contains('dark-mode');
     const btn = document.getElementById('themeToggleBtn');
     if (btn) {
         btn.innerHTML = isDark ? '☀️ نهاري' : '🌙 ليلي';
-        btn.style.backgroundColor = isDark ? '#2c3e50' : '#f39c12';
+        btn.style.backgroundColor = isDark ? '#334155' : '#f39c12';
     }
 }
 

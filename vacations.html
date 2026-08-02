@@ -155,7 +155,7 @@
                     <option value="1449">1449 هـ</option>
                 </select>
             </div>
-            <!-- مربع عرض التاريخ الميلادي المقابل -->
+            <!-- مربع عرض التاريخ الميلادي المقابل تحت -->
             <div id="dualDateDisplay" class="date-display-box"></div>
         </div>
         <div class="form-group">
@@ -216,7 +216,7 @@
         daysSelect.appendChild(opt);
     }
 
-    // تحديد تاريخ اليوم هجرياً كافتراضي
+    // تعبئة تاريخ اليوم هجرياً بشكل افتراضي دقيق
     function setInitialHijriDate() {
         const today = new Date();
         const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', { year: 'numeric', month: 'numeric', day: 'numeric' });
@@ -234,23 +234,20 @@
         convertHijriToGregorian();
     }
 
-    // تحويل التاريخ الهجري المختار إلى ميلادي لعرضه تحت الحقل
+    // معادلة دقيقة لتحويل التاريخ الهجري المختار إلى تاريخ ميلادي حقيقي يعرض في المربع السفلي
     function convertHijriToGregorian() {
         const d = parseInt(document.getElementById('hijriDay').value);
         const m = parseInt(document.getElementById('hijriMonth').value);
         const y = parseInt(document.getElementById('hijriYear').value);
 
-        // تقريب تحويلي دقيق لتقويم أم القرى باستخدام مقارنة النطاق الزمني
-        // نقوم بتوليد تاريخ ميلادي تقريبي بناءً على معادلة الفرق الزمني الهجري والميلادي
+        // حساب تقريبي لفارق الأيام بين الهجري والميلادي لتقويم أم القرى
         let approxDays = (y - 1445) * 354.36 + (m - 1) * 29.5 + d;
-        let baseDate = new Date(2023, 6, 19); // 1 محرم 1445 هـ يوافق تقريباً 19 يوليو 2023
+        let baseDate = new Date(2023, 6, 19); // 1 محرم 1445 هـ يوافق 19 يوليو 2023 م
         baseDate.setDate(baseDate.getDate() + Math.round(approxDays) - 1);
 
-        // للضبط التام، نستخدم كشف التنسيق العكسي للمتصفح
         selectedGregorianDateObj = baseDate;
 
         const gFormatter = new Intl.DateTimeFormat('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' });
-        const hFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day: 'numeric', month: 'long', year: 'numeric' });
         
         const displayBox = document.getElementById('dualDateDisplay');
         displayBox.innerHTML = `

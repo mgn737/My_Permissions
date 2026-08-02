@@ -128,10 +128,10 @@
     <div class="form-section" id="leaveForm">
         <div class="form-group">
             <label>تاريخ بداية الإجازة:</label>
-            <!-- استخدام تقويم الجوال الأصلي المدمج -->
+            <!-- حقل التاريخ بنفس تصميم وتنسيق باقي الحقول -->
             <input type="date" id="leaveDateInput" onchange="updateDualDateDisplay()">
             
-            <!-- مربع عرض التاريخين معاً بشكل متناسق بعد الاختيار -->
+            <!-- مربع عرض التاريخ الهجري فقط -->
             <div id="dualDateDisplay" class="date-display-box">اختر التاريخ من التقويم أعلاه</div>
         </div>
         <div class="form-group">
@@ -193,24 +193,18 @@
         updateDualDateDisplay();
     }
 
-    // تحديث وتنسيق عرض التاريخين (الميلادي والهجري معاً)
+    // تحديث وتنسيق عرض التاريخ الهجري فقط
     function updateDualDateDisplay() {
         const inputVal = document.getElementById('leaveDateInput').value;
         if (!inputVal) return;
 
         selectedDateObj = new Date(inputVal);
 
-        const gFormatter = new Intl.DateTimeFormat('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
         const hFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { year: 'numeric', month: 'long', day: 'numeric' });
-
-        const gFormatted = gFormatter.format(selectedDateObj);
         const hFormatted = hFormatter.format(selectedDateObj);
 
         const displayBox = document.getElementById('dualDateDisplay');
-        displayBox.innerHTML = `
-            📅 <b>الميلادي:</b> ${gFormatted}<br>
-            🌙 <b>الهجري:</b> ${hFormatted}
-        `;
+        displayBox.innerHTML = `🌙 <b>التاريخ الهجري:</b> ${hFormatted}`;
     }
 
     setInitialDate();
@@ -337,10 +331,8 @@
         returnDateObj.setDate(returnDateObj.getDate() + daysCount); 
         const returnDateStr = returnDateObj.toISOString().split('T')[0];
 
-        const gFormatter = new Intl.DateTimeFormat('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' });
         const hFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { year: 'numeric', month: 'long', day: 'numeric' });
-
-        const dateCombinedStr = `${hFormatter.format(selectedDateObj)}<br><small style="color:#7f8c8d;">${gFormatter.format(selectedDateObj)} م</small>`;
+        const dateCombinedStr = hFormatter.format(selectedDateObj);
 
         leavesHistory.push({
             startDate: dateCombinedStr,

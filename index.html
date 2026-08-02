@@ -5,25 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام إدارة التصاريح</title>
     <style>
+        /* المتغيرات الأساسية (الوضع النهاري) */
+        :root {
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --card-bg: #fff;
+            --title-color: #2c3e50;
+            --desc-color: #666;
+        }
+
+        /* المتغيرات للوضع الليلي */
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --title-color: #e0e0e0;
+            --desc-color: #aaa;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 90vh;
+            transition: background-color 0.3s, color 0.3s;
         }
         .container {
-            background-color: #fff;
+            background-color: var(--card-bg);
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 400px;
             text-align: center;
+            transition: background-color 0.3s;
         }
         .action-btn {
             display: block;
@@ -43,6 +63,19 @@
         }
         .action-btn:hover { background-color: #2980b9; }
         
+        /* زر الوضع الليلي */
+        .theme-btn {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
         /* تنسيق شاشة التحميل والصورة بعرض 350 */
         #loader {
             position: fixed;
@@ -50,12 +83,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #f4f7f6;
+            background-color: var(--bg-color);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
+            transition: background-color 0.3s;
         }
         .loader-img {
             width: 350px;
@@ -73,6 +107,10 @@
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
         }
+        .dark-mode .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #3498db;
+        }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -81,21 +119,31 @@
 </head>
 <body>
 
+    <!-- سكريبت لمنع وميض الشاشة البيضاء عند التحميل إذا كان الوضع الليلي مفعل -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+
     <!-- شاشة التحميل مع الصورة المحددة -->
     <div id="loader">
         <img src="IMG_4061.png" alt="شاشة التحميل" class="loader-img">
         <div class="spinner"></div>
-        <p>جاري التحميل...</p>
+        <p style="color: var(--text-color);">جاري التحميل...</p>
     </div>
 
     <!-- المحتوى -->
     <div class="container" id="content" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <span style="font-size: 18px; font-weight: bold; color: #2c3e50;">الرئيسية</span>
-            <a href="login.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 8px 12px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">👤</a>
+            <span style="font-size: 18px; font-weight: bold; color: var(--title-color);">الرئيسية</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()">🌙 ليلي</button>
+                <a href="login.html" style="text-decoration: none; background: #2ecc71; color: white; padding: 8px 12px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">👤</a>
+            </div>
         </div>
         
-        <p style="color: #666; font-size: 14px; margin-bottom: 25px; line-height: 1.5;">
+        <p style="color: var(--desc-color); font-size: 14px; margin-bottom: 25px; line-height: 1.5;">
             مرحباً بك في نظام إدارة التصاريح. الرجاء تسجيل الدخول للوصول للخدمات، أو استخدام الحاسبة للزوار.
         </p>
 
@@ -103,6 +151,24 @@
     </div>
 
     <script>
+        function initThemeBtn() {
+            const isDark = document.body.classList.contains('dark-mode');
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) {
+                btn.innerHTML = isDark ? '☀️ نهاري' : '🌙 ليلي';
+                btn.style.backgroundColor = isDark ? '#2c3e50' : '#f39c12';
+            }
+        }
+
+        window.toggleTheme = function() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            initThemeBtn();
+        }
+
+        initThemeBtn();
+
         // إخفاء شاشة التحميل بعد ثانيتين وإظهار المحتوى
         window.addEventListener('load', function() {
             setTimeout(function() {

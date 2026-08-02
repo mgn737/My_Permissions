@@ -3,46 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حاسبة وقت الخروج (التصاريح)</title>
+    <title>حاسبة وقت الخروج المتاحة</title>
     <style>
-        /* المتغيرات الأساسية (الوضع النهاري) */
         :root {
             --bg-color: #f4f7f6;
             --text-color: #333;
             --card-bg: #fff;
+            --border-color: #eee;
             --input-bg: #f0f2f5;
             --input-border: #ccc;
-            --result-bg: #e8f6f3;
             --title-color: #2c3e50;
-            --label-color: #333;
-            --highlight-color: #d35400;
-            --error-color: #e74c3c;
+            --result-bg: #ebf5fb;
+            --result-border: #3498db;
         }
 
-        /* المتغيرات للوضع الليلي */
         .dark-mode {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --card-bg: #1e1e1e;
-            --input-bg: #2c2c2c;
-            --input-border: #444;
-            --result-bg: #0b2b26;
-            --title-color: #e0e0e0;
-            --label-color: #ccc;
-            --highlight-color: #f39c12;
-            --error-color: #ff6b6b;
+            --bg-color: #0f172a;
+            --text-color: #e2e8f0;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+            --input-border: #475569;
+            --title-color: #f8fafc;
+            --result-bg: #172554;
+            --result-border: #3b82f6;
         }
 
         body {
             font-family: Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            flex-direction: column;
+            min-height: 90vh;
             transition: background-color 0.3s, color 0.3s;
         }
         .container {
@@ -50,135 +46,102 @@
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 400px;
+            width: 100%;
+            max-width: 450px;
             transition: background-color 0.3s;
         }
-        
-        /* تنسيق زر النمط الليلي أعلى النافذة */
-        .top-bar {
+        .header-flex {
             display: flex;
-            justify-content: flex-end;
-            margin-bottom: 10px;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
         }
-        .theme-btn {
-            background-color: #f39c12;
-            color: #fff;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            width: auto;
-            margin-top: 0;
-            transition: 0.3s;
+        h2 { color: var(--title-color); font-size: 18px; margin: 0; transition: color 0.3s; }
+        
+        .header-btns-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
-        .logo {
-            display: block;
-            margin: 0 auto 15px auto;
-            max-width: 120px;
-            height: auto;
-            border-radius: 8px;
-        }
-        h2 {
-            text-align: center;
-            color: var(--title-color);
-            margin-bottom: 20px;
-            font-size: 20px;
-            transition: color 0.3s;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: var(--label-color);
-            font-weight: bold;
+        .back-btn {
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
             font-size: 13px;
-            text-align: right;
-            transition: color 0.3s;
+            text-decoration: none;
+            display: inline-block;
         }
-        /* تصغير الخانات وجعلها متناسقة على اليمين */
-        input[type="time"], select {
-            width: 50%;
-            padding: 8px;
-            font-size: 14px;
-            border: 1px solid var(--input-border);
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-family: inherit;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            text-align: right;
-            display: block;
-            margin-right: 0;
-            margin-left: auto;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        
+        .theme-icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s;
         }
-        input[type="number"] {
+        .theme-icon-btn:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+        .dark-mode .theme-icon-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; color: var(--text-color); transition: color 0.3s; }
+        select, input {
             width: 100%;
-            padding: 8px;
+            padding: 9px;
             font-size: 14px;
             border: 1px solid var(--input-border);
             border-radius: 6px;
             box-sizing: border-box;
-            font-family: inherit;
             background-color: var(--input-bg);
             color: var(--text-color);
             text-align: right;
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
-        .permit-group {
-            display: flex;
-            gap: 10px;
-        }
-        .permit-group .form-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        button {
+        
+        .calc-btn {
             width: 100%;
             padding: 12px;
-            background-color: #2980b9;
+            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 5px;
+            transition: background 0.3s;
         }
-        button:hover {
-            background-color: #1f618d;
-        }
+        .calc-btn:hover { background-color: #2980b9; }
+
         .result-box {
             margin-top: 20px;
             padding: 15px;
             background-color: var(--result-bg);
-            border-right: 5px solid #1abc9c;
-            border-radius: 4px;
+            border: 1px solid var(--result-border);
+            border-radius: 8px;
+            text-align: center;
             display: none;
-            text-align: right;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, border-color 0.3s;
         }
-        .result-box p {
-            margin: 8px 0;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        .highlight {
-            font-weight: bold;
-            color: var(--highlight-color);
-            transition: color 0.3s;
-        }
+        .result-box h3 { margin: 0 0 8px 0; color: var(--title-color); font-size: 15px; }
+        .result-box p { font-size: 18px; font-weight: bold; color: #2980b9; margin: 0; }
+        .dark-mode .result-box p { color: #60a5fa; }
     </style>
 </head>
 <body>
 
-<!-- سكريبت صغير يشتغل فوراً لمنع الشاشة البيضاء عند التحديث إذا كان الوضع الليلي مفعل -->
 <script>
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
@@ -186,58 +149,50 @@
 </script>
 
 <div class="container">
-    <div class="top-bar">
-        <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()">🌙 ليلي</button>
+    <div class="header-flex">
+        <div class="header-btns-group">
+            <a href="index.html" class="back-btn">الرئيسية</a>
+            <button id="themeToggleBtn" class="theme-icon-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
+        </div>
+        <h2>حاسبة وقت الخروج المتاحة</h2>
     </div>
-    
-    <img src="IMG_3974.jpeg" class="logo" alt="شعار">
-    <h2>حاسبة وقت الخروج (التصاريح)</h2>
-    
+
     <div class="form-group">
-        <label for="calcType">طريقة الحساب:</label>
-        <select id="calcType">
-            <option value="1">يوم واحد</option>
-            <option value="2">يومين</option>
+        <label>فترة العمل (الشفت):</label>
+        <select id="shiftSelect" onchange="toggleCustomShift()">
+            <option value="07:15-15:15">الفترة الأولى (7:15 ص - 3:15 م)</option>
+            <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
+            <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
+            <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
+            <option value="custom">مخصص (تحديد يدوي)</option>
         </select>
     </div>
 
-    <div class="form-group">
-        <label for="startTime">بداية الشفت (متى تداوم):</label>
-        <input type="time" id="startTime" required>
-    </div>
-
-    <div class="form-group">
-        <label for="endTime">نهاية الشفت المعتاد:</label>
-        <input type="time" id="endTime" required>
-    </div>
-
-    <div class="form-group">
-        <label>رصيد التصريح المراد استخدامه:</label>
-        <div class="permit-group">
-            <div class="form-group">
-                <input type="number" id="permitHours" placeholder="ساعات (مثال: 2)" min="0" max="24">
-            </div>
-            <div class="form-group">
-                <input type="number" id="permitMinutes" placeholder="دقائق (مثال: 30)" min="0" max="59">
-            </div>
+    <div id="customShiftBox" style="display: none; margin-bottom: 15px;">
+        <div style="display: flex; gap: 10px; width: 100%;">
+            <div style="flex:1;"><label>نهاية الشفت:</label><input type="time" id="customEnd" value="15:15"></div>
         </div>
     </div>
 
-    <button onclick="calculateExitTime()">احسب وقت الخروج</button>
+    <div class="form-group">
+        <label>مدة الاستئذان المطلوبة (بالدقائق):</label>
+        <input type="number" id="permitDuration" placeholder="مثال: 60" min="1" value="60">
+    </div>
 
-    <div class="result-box" id="resultBox">
-        <p id="resultText"></p>
+    <button class="calc-btn" onclick="calculateExitTime()">احسب وقت الخروج المناسب</button>
+
+    <div id="resultBox" class="result-box">
+        <h3>أقرب وقت متاح للخروج:</h3>
+        <p id="resultText">-</p>
     </div>
 </div>
 
 <script>
-// إعداد وتشغيل النمط الليلي/النهاري
 function initThemeBtn() {
     const isDark = document.body.classList.contains('dark-mode');
     const btn = document.getElementById('themeToggleBtn');
     if (btn) {
-        btn.innerHTML = isDark ? '☀️ نهاري' : '🌙 ليلي';
-        btn.style.backgroundColor = isDark ? '#2c3e50' : '#f39c12';
+        btn.innerHTML = isDark ? '☀️' : '🌙';
     }
 }
 
@@ -250,96 +205,47 @@ window.toggleTheme = function() {
 
 initThemeBtn();
 
-// حاسبة وقت الخروج
-function format12Hour(totalMins) {
-    let hours24 = Math.floor((totalMins / 60) % 24);
-    let mins = totalMins % 60;
-    let period = hours24 >= 12 ? 'م' : 'ص';
-    let hours12 = hours24 % 12;
-    hours12 = hours12 ? hours12 : 12; // الساعة 12 بدلاً من 0
-    return `${hours12}:${String(mins).padStart(2, '0')} ${period}`;
+function toggleCustomShift() {
+    const val = document.getElementById('shiftSelect').value;
+    document.getElementById('customShiftBox').style.display = (val === 'custom') ? 'block' : 'none';
 }
 
 function calculateExitTime() {
-    const type = document.getElementById('calcType').value;
-    const startTimeVal = document.getElementById('startTime').value;
-    const endTimeVal = document.getElementById('endTime').value;
-    const pHours = parseInt(document.getElementById('permitHours').value) || 0;
-    const pMinutes = parseInt(document.getElementById('permitMinutes').value) || 0;
-    
-    const resultBox = document.getElementById('resultBox');
-    const resultText = document.getElementById('resultText');
+    const shiftVal = document.getElementById('shiftSelect').value;
+    let endTimeStr = "15:15";
 
-    if (!startTimeVal || !endTimeVal) {
-        alert('الرجاء إدخال وقت بداية ونهاية الشفت');
+    if (shiftVal !== 'custom') {
+        endTimeStr = shiftVal.split('-')[1];
+    } else {
+        endTimeStr = document.getElementById('customEnd').value || "15:15";
+    }
+
+    const durationMins = Number(document.getElementById('permitDuration').value);
+    if (!durationMins || durationMins <= 0) {
+        alert('الرجاء إدخال مدة صحيحة بالدقائق!');
         return;
     }
 
-    const [startH, startM] = startTimeVal.split(':').map(Number);
-    const [endH, endM] = endTimeVal.split(':').map(Number);
+    let [endH, endM] = endTimeStr.split(':').map(Number);
+    let totalEndMins = endH * 60 + endM;
+
+    let targetTotalMins = totalEndMins - durationMins;
+    if (targetTotalMins < 0) targetTotalMins += 24 * 60;
+
+    let finalH = Math.floor(targetTotalMins / 60);
+    let finalM = targetTotalMins % 60;
+
+    let period = 'ص';
+    if (finalH >= 12) {
+        period = 'م';
+        if (finalH > 12) finalH -= 12;
+    }
+    if (finalH === 0) finalH = 12;
+
+    const formattedTime = `${finalH}:${String(finalM).padStart(2, '0')} ${period}`;
     
-    let startTotalMins = startH * 60 + startM;
-    let endTotalMins = endH * 60 + endM;
-    const permitTotalMins = pHours * 60 + pMinutes;
-
-    // معالجة الشفتات الليلية (تتجاوز منتصف الليل)
-    if (endTotalMins <= startTotalMins) {
-        endTotalMins += 24 * 60;
-    }
-
-    const singleShiftMins = endTotalMins - startTotalMins;
-
-    if (type === '1') {
-        // نظام يوم واحد
-        if (permitTotalMins > singleShiftMins) {
-            resultText.innerHTML = `<span class="highlight" style="color: var(--error-color);">عذراً، رصيد التصريح المدخل أكبر من إجمالي ساعات الشفت الواحد!</span>`;
-        } else {
-            const actualWorkMins = singleShiftMins - permitTotalMins;
-            const exitTotalMins = startTotalMins + actualWorkMins;
-
-            const formattedExit = format12Hour(exitTotalMins);
-            const actH = Math.floor(actualWorkMins / 60);
-            const actM = actualWorkMins % 60;
-
-            resultText.innerHTML = `
-                وقت الخروج بعد خصم التصريح: <span class="highlight">${formattedExit}</span><br>
-                ساعات العمل الفعلية للدوام: <span class="highlight">${actH} ساعة و ${actM} دقيقة</span>
-            `;
-        }
-    } else {
-        // نظام يومين (تغطية اليوم الثاني بالكامل)
-        const day2CoverMins = singleShiftMins;
-
-        if (permitTotalMins < day2CoverMins) {
-            // إذا كان التصريح أقل من شفت اليوم الثاني، فلا يمكن تغطيته
-            const requiredHours = Math.floor(day2CoverMins / 60);
-            const requiredMins = day2CoverMins % 60;
-            resultText.innerHTML = `<span class="highlight" style="color: var(--error-color);">عذراً، رصيد التصريح المدخل لا يكفي لتغطية اليوم الثاني بالكامل. تحتاج على الأقل لـ ${requiredHours} ساعة و ${requiredMins} دقيقة.</span>`;
-        } else {
-            // إذا كان التصريح أكبر من أو يساوي شفت اليوم الثاني
-            const remainingPermitMins = permitTotalMins - day2CoverMins;
-            
-            if (remainingPermitMins >= singleShiftMins) {
-                 resultText.innerHTML = `<span class="highlight" style="color: var(--error-color);">عذراً، رصيد التصريح المدخل يغطي يومين بالكامل أو أكثر! لا داعي للحضور أساساً.</span>`;
-            } else {
-                const day1WorkMins = singleShiftMins - remainingPermitMins;
-                const exitTotalMins = startTotalMins + day1WorkMins;
-                const formattedExit = format12Hour(exitTotalMins);
-
-                const d1H = Math.floor(day1WorkMins / 60);
-                const d1M = day1WorkMins % 60;
-
-                resultText.innerHTML = `
-                    وقت الخروج في اليوم الأول: <span class="highlight">${formattedExit}</span><br>
-                    ساعات العمل في اليوم الأول: <span class="highlight">${d1H} ساعة و ${d1M} دقيقة</span><br>
-                    اليوم الثاني: <span class="highlight">بصم واطلع</span><br>
-                    ساعات العمل في اليوم الثاني: <span class="highlight">لا يوجد (مغطى بالتصريح)</span>
-                `;
-            }
-        }
-    }
-
-    resultBox.style.display = 'block';
+    document.getElementById('resultText').innerText = `يمكنك الخروج ابتداءً من الساعة: ${formattedTime}`;
+    document.getElementById('resultBox').style.display = 'block';
 }
 </script>
 

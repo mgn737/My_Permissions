@@ -280,6 +280,10 @@
             if (hDate.month > renewSettings.month || (hDate.month === renewSettings.month && hDate.day >= renewSettings.day)) {
                 mainBalance += 36;
                 lastMainRenewYear = hDate.year;
+                
+                // التعديل الجديد: تصفير سجل الإجازات مع إضافة الرصيد السنوي
+                leavesHistory = []; 
+                
                 changed = true;
             }
         }

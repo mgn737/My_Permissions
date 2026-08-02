@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الإجازات</title>
+    <!-- استدعاء مكتبات Firebase السحابية -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        // إعدادات قاعدة البيانات الخاصة بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyD10nYcvOM_5s8Hd-MFe2lTsRqkJ7TQ4vA",
+            authDomain: "my--permissions.firebaseapp.com",
+            projectId: "my--permissions",
+            storageBucket: "my--permissions.firebasestorage.app",
+            messagingSenderId: "476127156640",
+            appId: "1:476127156640:web:48f68b18dba796f1a2acc5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+
+        window.isFirebaseReady = true;
+        if (typeof window.startApp === 'function') {
+            window.startApp();
+        }
+    </script>
+
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .header-btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; font-size: 14px; }
+        .logout-btn { background-color: #e74c3c; }
+        .home-btn { background-color: #34495e; }
+        
+        .balances-container { display: flex; gap: 20px; margin-bottom: 20px; }
+        .balance-card { flex: 1; background: #fff; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
+        .balance-card h3 { margin: 0 0 10px 0; color: #2c3e50; font-size: 16px; }
+        .balance-card .num { font-size: 32px; font-weight: bold; color: #27ae60; }
+        .settings-icon { position: absolute; top: 10px; left: 10px; cursor: pointer; opacity: 0.3; transition: 0.3s; font-size: 18px; }
+        .settings-icon:hover { opacity: 1; }
+
+        .btn-main { background-color: #2980b9; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 20px; }
+        .btn-main:hover { background-color: #217dbb; }
+        
+        .form-section, .settings-section { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; margin-bottom: 20px; border: 2px solid #3498db; }
+        .form-group { margin-bottom: 15px; text-align: right; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; background-color: #f0f2f5; }
+        
+        .flex-btns { display: flex; gap: 10px; }
+        .btn-submit { background-color: #27ae60; flex: 1; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-cancel { background-color: #95a5a6; flex: 1; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        table { width: 100%; background: #fff; border-collapse: collapse; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; margin-top: 10px; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background-color: #34495e; color: white; }
+        .action-icon { cursor: pointer; margin: 0 5px; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="header-btn logout-btn" onclick="logout()">تسجيل خروج</button>
+        <a href="home.html" class="header-btn home-btn">الرئيسية 🏠</a>
+    </div>
+
+    <div class="balances-container">
+        <div class="balance-card">
+            <h3>رصيد الإجازات</h3>
+            <div class="num" id="mainBalanceDisplay">...</div>
+            <span class="settings-icon" onclick="toggleSettings()" title="إعدادات تاريخ التجديد السنوي">⚙️</span>
+        </div>
+        <div class="balance-card">
+            <h3>الأيام المتفرقة</h3>
+            <div class="num" id="scatBalanceDisplay" style="color: #f39c12;">...</div>
+            <small style="color: #7f8c8d; display: block; margin-top: 5px; font-size: 11px;">تتجدد 1/1 هجري</small>
+        </div>
+    </div>
+
+    <div class="settings-section" id="settingsForm">
+        <h4 style="margin-top: 0; color: #2c3e50;">تحديد تاريخ تجديد الرصيد السنوي (هجري)</h4>
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;">
+                <label>اليوم الهجري:</label>
+                <input type="number" id="renewDay" min="1" max="30" placeholder="مثال: 1">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>الشهر الهجري:</label>
+                <input type="number" id="renewMonth" min="1" max="12" placeholder="مثال: 1">
+            </div>
+        </div>
+        <button class="btn-submit" style="width: 100%;" onclick="saveRenewalDate()">حفظ الإعدادات</button>
+    </div>
+
+    <button class="btn-main" onclick="toggleLeaveForm()">➕ طلب إجازة</button>
+
+    <div class="form-section" id="leaveForm">
+        <div class="form-group">
+            <label>تاريخ بداية الإجازة:</label>
+            <input type="date" id="leaveDate">
+        </div>
+        <div class="form-group">
+            <label>عدد أيام الإجازة (1 - 100):</label>
+            <select id="leaveDays"></select>
+        </div>
+        <div class="flex-btns">
+            <button class="btn-submit" onclick="submitLeave()">رفع الإجازة</button>
+            <button class="btn-cancel" onclick="toggleLeaveForm()">إلغاء</button>
+        </div>
+    </div>
+
+    <h3 style="color: #2c3e50; margin-bottom: 5px;">سجل الإجازات</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>التاريخ</th>
+                <th>اليوم</th>
+                <th>الأيام</th>
+                <th>المباشرة</th>
+                <th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="leaveTableBody"></tbody>
+    </table>
+
+<script>
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+    }
+
+    const currentUsername = localStorage.getItem('currentUser') || 'defaultUser';
+    document.getElementById('leaveDate').valueAsDate = new Date();
+
+    let mainBalance = 36;
+    let scatBalance = 10;
+    let renewSettings = { day: 1, month: 1 };
+    let lastMainRenewYear = 0;
+    let lastScatRenewYear = 0;
+    let leavesHistory = [];
+    let isDataLoaded = false;
+
+    // تعبئة قائمة الأيام
+    const daysSelect = document.getElementById('leaveDays');
+    for (let i = 1; i <= 100; i++) {
+        let opt = document.createElement('option');
+        opt.value = i;
+        opt.innerText = i + (i === 1 ? ' يوم' : ' أيام');
+        daysSelect.appendChild(opt);
+    }
+
+    // تحميل البيانات من Firebase
+    async function loadDataFromCloud() {
+        if (!window.db || !window.doc) {
+            setTimeout(loadDataFromCloud, 200);
+            return;
+        }
+
+        try {
+            const docRef = window.doc(window.db, "vacsData", currentUsername);
+            const docSnap = await window.getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                mainBalance = data.mainBalance !== undefined ? Number(data.mainBalance) : 36;
+                scatBalance = data.scatBalance !== undefined ? Number(data.scatBalance) : 10;
+                renewSettings = data.renewSettings || { day: 1, month: 1 };
+                lastMainRenewYear = data.lastMainRenewYear || 0;
+                lastScatRenewYear = data.lastScatRenewYear || 0;
+                leavesHistory = data.leavesHistory || [];
+            } else {
+                await window.setDoc(docRef, { mainBalance, scatBalance, renewSettings, lastMainRenewYear, lastScatRenewYear, leavesHistory }, { merge: true });
+            }
+
+            isDataLoaded = true;
+            checkRenewals(); // التحقق من التجديد السنوي
+        } catch (e) {
+            console.error("خطأ في جلب بيانات الإجازات:", e);
+        }
+    }
+
+    // حفظ البيانات في Firebase
+    async function saveDataToCloud() {
+        try {
+            if (!window.db || !window.doc) return;
+            const docRef = window.doc(window.db, "vacsData", currentUsername);
+            await window.setDoc(docRef, {
+                mainBalance: Number(mainBalance),
+                scatBalance: Number(scatBalance),
+                renewSettings: renewSettings,
+                lastMainRenewYear: lastMainRenewYear,
+                lastScatRenewYear: lastScatRenewYear,
+                leavesHistory: leavesHistory
+            }, { merge: true });
+        } catch (e) {
+            console.error("خطأ في حفظ البيانات:", e);
+        }
+    }
+
+    // جلب التاريخ الهجري
+    function getTodayHijri() {
+        const today = new Date();
+        const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', { year: 'numeric', month: 'numeric', day: 'numeric' });
+        const parts = formatter.formatToParts(today);
+        let hijri = {};
+        parts.forEach(p => { if (p.type === 'year' || p.type === 'month' || p.type === 'day') hijri[p.type] = parseInt(p.value); });
+        return hijri;
+    }
+
+    // التجديد التلقائي
+    async function checkRenewals() {
+        const hDate = getTodayHijri();
+        let changed = false;
+        
+        // تجديد المتفرقة (1/1 هجري)
+        if (lastScatRenewYear === 0) { lastScatRenewYear = hDate.year; changed = true; }
+        if (hDate.year > lastScatRenewYear) {
+            scatBalance = 10;
+            lastScatRenewYear = hDate.year;
+            changed = true;
+        }
+
+        // تجديد الأساسي بناءً على الإعدادات
+        if (lastMainRenewYear === 0) { lastMainRenewYear = hDate.year; changed = true; }
+        if (hDate.year > lastMainRenewYear) {
+            if (hDate.month > renewSettings.month || (hDate.month === renewSettings.month && hDate.day >= renewSettings.day)) {
+                mainBalance += 36;
+                lastMainRenewYear = hDate.year;
+                changed = true;
+            }
+        }
+        
+        if (changed) await saveDataToCloud();
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('mainBalanceDisplay').innerText = mainBalance;
+        document.getElementById('scatBalanceDisplay').innerText = scatBalance;
+        
+        const tbody = document.getElementById('leaveTableBody');
+        tbody.innerHTML = '';
+        leavesHistory.forEach((leave, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${leave.startDate}</td>
+                <td>${leave.dayName}</td>
+                <td>${leave.daysCount}</td>
+                <td>${leave.returnDate}</td>
+                <td>
+                    <span class="action-icon" title="حذف" style="color: red;" onclick="deleteLeave(${index})">🗑️</span>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // دالة رفع الإجازة والشروط
+    window.submitLeave = async function() {
+        const dateInput = document.getElementById('leaveDate').value;
+        const daysCount = parseInt(document.getElementById('leaveDays').value);
+        
+        if (!dateInput || daysCount < 1) return alert("الرجاء تحديد تاريخ صحيح.");
+
+        // تطبيق شروط الخصم
+        if (daysCount >= 1 && daysCount <= 4) {
+            if (daysCount > scatBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأيام المتفرقة (${scatBalance} يوم متاح).`);
+            if (daysCount > mainBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأساسي (${mainBalance} يوم متاح).`);
+            scatBalance -= daysCount;
+            mainBalance -= daysCount;
+        } else if (daysCount >= 5) {
+            if (daysCount > mainBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأساسي (${mainBalance} يوم متاح).`);
+            mainBalance -= daysCount;
+        }
+
+        const startDateObj = new Date(dateInput);
+        const daysAr = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+        const dayName = daysAr[startDateObj.getDay()];
+        
+        const returnDateObj = new Date(startDateObj);
+        returnDateObj.setDate(returnDateObj.getDate() + daysCount); 
+        const returnDateStr = returnDateObj.toISOString().split('T')[0];
+
+        leavesHistory.push({
+            startDate: dateInput,
+            dayName: dayName,
+            daysCount: daysCount,
+            returnDate: returnDateStr
+        });
+
+        toggleLeaveForm();
+        updateUI();
+        await saveDataToCloud();
+        alert("تم رفع الإجازة وحفظها سحابياً بنجاح!");
+    }
+
+    window.deleteLeave = async function(index) {
+        if(confirm("هل أنت متأكد من حذف هذه الإجازة واسترجاع الرصيد؟")) {
+            const leave = leavesHistory[index];
+            if (leave.daysCount >= 1 && leave.daysCount <= 4) {
+                scatBalance += leave.daysCount;
+                mainBalance += leave.daysCount;
+            } else {
+                mainBalance += leave.daysCount;
+            }
+            leavesHistory.splice(index, 1);
+            updateUI();
+            await saveDataToCloud();
+        }
+    }
+
+    window.toggleLeaveForm = function() {
+        const form = document.getElementById('leaveForm');
+        form.style.display = form.style.display === 'block' ? 'none' : 'block';
+    }
+
+    window.toggleSettings = function() {
+        const setForm = document.getElementById('settingsForm');
+        setForm.style.display = setForm.style.display === 'block' ? 'none' : 'block';
+        document.getElementById('renewDay').value = renewSettings.day;
+        document.getElementById('renewMonth').value = renewSettings.month;
+    }
+
+    window.saveRenewalDate = async function() {
+        const d = document.getElementById('renewDay').value;
+        const m = document.getElementById('renewMonth').value;
+        if(d && m) {
+            renewSettings = { day: parseInt(d), month: parseInt(m) };
+            await saveDataToCloud();
+            alert("تم حفظ تاريخ التجديد سحابياً!");
+            toggleSettings();
+            checkRenewals();
+        }
+    }
+
+    window.logout = function() {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+    }
+
+    window.startApp = function() {
+        loadDataFromCloud();
+    };
+
+    if (window.isFirebaseReady) {
+        window.startApp();
+    }
+</script>
+</body>
+</html>

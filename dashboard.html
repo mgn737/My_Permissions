@@ -591,7 +591,7 @@ window.calculateInfo = function() {
         dObj2.setDate(dObj2.getDate() + 1);
         let dateStr2 = dObj2.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
 
-        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
+        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تداوم ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
         p2.innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (يخصم 8 ساعات كاملة).`;
         p2.style.display = 'block';
     } else if (remainingTotalMins < 480 && remainingTotalMins > 0) {
@@ -602,7 +602,7 @@ window.calculateInfo = function() {
         let ex1M = exit1TotalMins % 60;
         let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
 
-        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تدوام ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
+        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تداوم ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
         p2.style.display = 'none';
     }
 

@@ -344,7 +344,7 @@
         toggleLeaveForm();
         updateUI();
         await saveDataToCloud();
-        alert("تم رفع الإجازة وحفظها سحابياً بنجاح!");
+        alert("تم رفع الإجازة!");
     }
 
     window.deleteLeave = async function(index) {
@@ -380,7 +380,7 @@
         if(d && m) {
             renewSettings = { day: parseInt(d), month: parseInt(m) };
             await saveDataToCloud();
-            alert("تم حفظ تاريخ التجديد سحابياً!");
+            alert("تم حفظ تاريخ التجديد!");
             toggleSettings();
             checkRenewals();
         }

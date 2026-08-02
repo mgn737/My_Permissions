@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - إدارة التصاريح</title>
+    <title>لوحة التحكم - إدارة التصاريح الشهرية</title>
     <!-- استدعاء مكتبات Firebase السحابية -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
@@ -34,7 +34,6 @@
     </script>
 
     <style>
-        /* المتغيرات الأساسية (الوضع النهاري) */
         :root {
             --bg-color: #f4f7f6;
             --text-color: #333;
@@ -43,39 +42,28 @@
             --input-bg: #f0f2f5;
             --input-border: #ccc;
             --title-color: #2c3e50;
-            --stats-bg: #e8f6f3;
-            --stats-border: #1abc9c;
-            --stats-title: #16a085;
+            --stats-bg: #e8f8f5;
+            --stats-border: #2ecc71;
+            --stats-title: #27ae60;
             --stats-num: #2c3e50;
-            --stats-small: #7f8c8d;
-            --calc-bg: #fef9e7;
-            --calc-border: #f39c12;
-            --calc-title: #d35400;
-            --result-bg: #fff;
             --table-th-bg: #f4f7f6;
             --table-border: #ddd;
         }
 
-        /* المتغيرات للوضع الليلي */
         .dark-mode {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --card-bg: #1e1e1e;
-            --border-color: #333;
-            --input-bg: #2c2c2c;
-            --input-border: #444;
-            --title-color: #e0e0e0;
-            --stats-bg: #0b2b26;
-            --stats-border: #16a085;
-            --stats-title: #48c9b0;
-            --stats-num: #e0e0e0;
-            --stats-small: #aaa;
-            --calc-bg: #332200;
-            --calc-border: #b9770e;
-            --calc-title: #f39c12;
-            --result-bg: #1e1e1e;
-            --table-th-bg: #2c2c2c;
-            --table-border: #444;
+            --bg-color: #0f172a;
+            --text-color: #e2e8f0;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+            --input-border: #475569;
+            --title-color: #f8fafc;
+            --stats-bg: #064e3b;
+            --stats-border: #059669;
+            --stats-title: #34d399;
+            --stats-num: #f8fafc;
+            --table-th-bg: #0f172a;
+            --table-border: #334155;
         }
 
         body {
@@ -111,9 +99,10 @@
         .header-btns-group {
             display: flex;
             gap: 8px;
+            align-items: center;
         }
 
-        .back-btn, .logout-btn, .theme-btn {
+        .back-btn, .logout-btn {
             color: white;
             border: none;
             padding: 6px 12px;
@@ -125,8 +114,23 @@
         }
         .back-btn { background-color: #2980b9; }
         .logout-btn { background-color: #e74c3c; }
-        .theme-btn { background-color: #f39c12; transition: 0.3s; font-weight: bold; }
         
+        .theme-icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        .theme-icon-btn:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+        .dark-mode .theme-icon-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
         .card-stats {
             background-color: var(--stats-bg);
             border: 1px solid var(--stats-border);
@@ -136,44 +140,8 @@
             margin-bottom: 20px;
             transition: background-color 0.3s, border-color 0.3s;
         }
-        .card-stats h3 { margin: 0 0 5px 0; color: var(--stats-title); font-size: 15px; transition: color 0.3s; }
-        .card-stats span { font-size: 20px; font-weight: bold; color: var(--stats-num); display: block; transition: color 0.3s; }
-        .card-stats small { font-size: 13px; color: var(--stats-small); margin-top: 5px; display: block; transition: color 0.3s; }
-
-        .dynamic-calc-btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #f39c12;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 15px;
-            display: none;
-        }
-        .calc-box {
-            background-color: var(--calc-bg);
-            border: 2px dashed var(--calc-border);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        .calc-box h4 { margin: 0 0 10px 0; color: var(--calc-title); font-size: 14px; text-align: right; transition: color 0.3s; }
-        .result-box {
-            background-color: var(--result-bg);
-            border: 1px solid var(--calc-border);
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 12px;
-            text-align: right;
-            display: none;
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        .result-box p { margin: 6px 0; font-size: 13px; color: var(--text-color); transition: color 0.3s; }
+        .card-stats h3 { margin: 0 0 5px 0; color: var(--stats-title); font-size: 16px; transition: color 0.3s; }
+        .card-stats span { font-size: 20px; font-weight: bold; color: var(--stats-num); transition: color 0.3s; }
 
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; color: var(--text-color); transition: color 0.3s; }
@@ -189,18 +157,10 @@
             text-align: right;
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
-        .note-text {
-            font-size: 11px;
-            color: var(--stats-small);
-            margin-top: 4px;
-            display: block;
-            text-align: right;
-            transition: color 0.3s;
-        }
         .action-btn {
             width: 100%;
             padding: 12px;
-            background-color: #27ae60;
+            background-color: #2ecc71;
             color: white;
             border: none;
             border-radius: 8px;
@@ -209,8 +169,7 @@
             cursor: pointer;
             margin-top: 5px;
         }
-        .action-btn:hover { background-color: #219653; }
-        .btn-calc { background-color: #e67e22; }
+        .action-btn:hover { background-color: #27ae60; }
 
         h3 { color: var(--title-color); transition: color 0.3s; }
 
@@ -233,7 +192,6 @@
 </head>
 <body>
 
-<!-- سكريبت لمنع الشاشة البيضاء عند التحديث إذا كان الوضع الليلي مفعل -->
 <script>
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
@@ -244,122 +202,35 @@
     <div class="header-flex">
         <div class="header-btns-group">
             <a href="home.html" class="back-btn">الرئيسية</a>
-            <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()">🌙 ليلي</button>
+            <button id="themeToggleBtn" class="theme-icon-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
         </div>
-        <h2 id="pageTitle">إدارة التصاريح الشهرية</h2>
+        <h2>إدارة التصاريح الشهرية</h2>
         <button class="logout-btn" onclick="logout()">خروج</button>
     </div>
 
     <div class="card-stats">
-        <h3>رصيد التصاريح المتاحة هذا الشهر</h3>
-        <span id="remainingHoursDisplay">جاري التحميل...</span>
-        <small>رصيد التأخير المتبقي: <span id="remainingDelayDisplay">--</span></small>
-    </div>
-
-    <button id="dynamicCalcBtn" class="dynamic-calc-btn" onclick="toggleCalcBox()">⚡ حاسبة توزيع التصريح على (يومين)</button>
-
-    <div id="calcSection" class="calc-box">
-        <h4 id="calcBoxTitle">⚡ حاسبة وقت الخروج (معلومات استكشافية):</h4>
-        <div class="form-group">
-            <label>تاريخ البدء:</label>
-            <input type="date" id="calcDateInput">
-        </div>
-        <div class="form-group">
-            <label>فترة العمل (الشفت) للحاسبة:</label>
-            <select id="calcShiftSelect" onchange="toggleCalcCustomShift()">
-                <option value="07:15-15:15">الفترة الأولى (7:15 ص - 3:15 م)</option>
-                <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
-                <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
-                <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
-                <option value="custom">مخصص (تحديد يدوي)</option>
-            </select>
-        </div>
-        <div id="calcCustomShiftBox" style="display: none; margin-bottom: 15px;">
-            <div style="display: flex; gap: 10px; width: 100%;">
-                <div style="flex:1;"><label>بداية:</label><input type="time" id="calcCustomStart" value="07:15"></div>
-                <div style="flex:1;"><label>نهاية:</label><input type="time" id="calcCustomEnd" value="15:15"></div>
-            </div>
-        </div>
-        <button class="action-btn btn-calc" onclick="calculateInfo()">احسب وقت الخروج (معلومات)</button>
-        <div id="calcResultBox" class="result-box">
-            <p id="resText1"></p>
-            <p id="resText2"></p>
-        </div>
+        <h3>رصيد التصاريح المتبقي: <span id="remainingPermitsDisplay">جاري التحميل...</span></h3>
     </div>
 
     <div class="form-group">
-        <label>فترة العمل (الشفت):</label>
-        <select id="shiftSelect" onchange="updateUI(); toggleCustomShift();">
-            <option value="07:15-15:15">الفترة الأولى (7:15 ص - 3:15 م)</option>
-            <option value="05:00-13:00">الفترة الثانية (5 ص - 1 م)</option>
-            <option value="22:00-06:00">الفترة الثالثة (10 م - 6 ص)</option>
-            <option value="00:00-08:00">الفترة الرابعة (12 ص - 8 ص)</option>
-            <option value="custom">مخصص (تحديد يدوي)</option>
-        </select>
-    </div>
-
-    <div id="customShiftBox" style="display: none; margin-bottom: 15px;">
-        <div style="display: flex; gap: 10px; width: 100%;">
-            <div style="flex:1;"><label>بداية:</label><input type="time" id="customStart" onchange="updateUI()"></div>
-            <div style="flex:1;"><label>نهاية:</label><input type="time" id="customEnd" onchange="updateUI()"></div>
-        </div>
+        <label>مدة الاستئذان (بالدقائق):</label>
+        <input type="number" id="permitMinutes" placeholder="مثال: 60 أو 120" min="1">
     </div>
 
     <div class="form-group">
-        <label>تاريخ الاستئذان:</label>
+        <label>تاريخ التصريح:</label>
         <input type="date" id="permitDateInput">
     </div>
 
-    <div class="form-group">
-        <label>إدخال الاستئذان (اختر إحدى الطريقتين):</label>
-        <div style="display: flex; gap: 10px;">
-            <div style="flex: 1;">
-                <div style="display: flex; gap: 5px;">
-                    <select id="permitHoursSelect" style="flex: 1;">
-                        <option value="0">0 ساعة</option>
-                        <option value="1">1 ساعة</option>
-                        <option value="2">2 ساعة</option>
-                        <option value="3">3 ساعات</option>
-                        <option value="4">4 ساعات</option>
-                        <option value="5">5 ساعات</option>
-                        <option value="6">6 ساعات</option>
-                        <option value="7">7 ساعات</option>
-                        <option value="8">8 ساعات</option>
-                    </select>
-                    <select id="permitMinsSelect" style="flex: 1;">
-                        <option value="0">0 دقيقة</option>
-                        <option value="15">15 دقيقة</option>
-                        <option value="30">30 دقيقة</option>
-                        <option value="45">45 دقيقة</option>
-                        <script>
-                            let minsHtml = '';
-                            for(let i=1; i<60; i++) {
-                                if(i !== 15 && i !== 30 && i !== 45) {
-                                    minsHtml += `<option value="${i}">${i} دقيقة</option>`;
-                                }
-                            }
-                            document.write(minsHtml);
-                        </script>
-                    </select>
-                </div>
-                <span class="note-text">اختر الساعات والدقائق</span>
-            </div>
-            <div style="flex: 1;">
-                <input type="time" id="exitTimeInput">
-                <span class="note-text">وقت الخروج</span>
-            </div>
-        </div>
-    </div>
-
-    <button class="action-btn" onclick="addPermit()">حفظ وتطبيق التصريح</button>
+    <button class="action-btn" onclick="addPermit()">حفظ وخصم التصريح</button>
 
     <h3 style="margin-top: 25px; font-size: 15px;">سجل التصاريح لهذا الشهر</h3>
     <table>
         <thead>
             <tr>
-                <th>اليوم والتاريخ</th>
-                <th>الساعات</th>
-                <th>إجراءات</th>
+                <th>التاريخ</th>
+                <th>المدة</th>
+                <th>الإجراءات</th>
             </tr>
         </thead>
         <tbody id="permitsTableBody">
@@ -368,13 +239,11 @@
 </div>
 
 <script>
-// إعداد وتشغيل النمط الليلي/النهاري
 function initThemeBtn() {
     const isDark = document.body.classList.contains('dark-mode');
     const btn = document.getElementById('themeToggleBtn');
     if (btn) {
-        btn.innerHTML = isDark ? '☀️ نهاري' : '🌙 ليلي';
-        btn.style.backgroundColor = isDark ? '#2c3e50' : '#f39c12';
+        btn.innerHTML = isDark ? '☀️' : '🌙';
     }
 }
 
@@ -392,9 +261,7 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
 }
 
 let currentUsername = localStorage.getItem('currentUser') || 'defaultUser';
-
 document.getElementById('permitDateInput').valueAsDate = new Date();
-document.getElementById('calcDateInput').valueAsDate = new Date();
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
@@ -402,23 +269,7 @@ function logout() {
     window.location.href = 'login.html';
 }
 
-function toggleCustomShift() {
-    const val = document.getElementById('shiftSelect').value;
-    document.getElementById('customShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
-}
-
-function toggleCalcCustomShift() {
-    const val = document.getElementById('calcShiftSelect').value;
-    document.getElementById('calcCustomShiftBox').style.display = (val === 'custom') ? 'flex' : 'none';
-}
-
-function toggleCalcBox() {
-    const box = document.getElementById('calcSection');
-    box.style.display = (box.style.display === 'block') ? 'none' : 'block';
-}
-
 let remainingTotalMins = 1320;
-let remainingDelayMins = 480;
 let permitsList = [];
 let isDataLoaded = false;
 
@@ -439,25 +290,28 @@ async function loadDataFromCloud() {
             const data = docSnap.data();
             if (data.savedMonth === currentMonth) {
                 remainingTotalMins = (data.remainingTotalMins !== undefined) ? Number(data.remainingTotalMins) : 1320;
-                remainingDelayMins = (data.remainingDelayMins !== undefined) ? Number(data.remainingDelayMins) : 480;
                 permitsList = data.permitsList || [];
             } else {
                 remainingTotalMins = 1320;
-                remainingDelayMins = 480;
                 permitsList = [];
-                await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, remainingDelayMins, permitsList }, { merge: true });
+                await window.setDoc(docRef, { 
+                    savedMonth: currentMonth, 
+                    remainingTotalMins, 
+                    permitsList,
+                    delaysList: data.delaysList || [],
+                    remainingDelayMins: data.remainingDelayMins !== undefined ? data.remainingDelayMins : 480
+                }, { merge: true });
             }
         } else {
             remainingTotalMins = 1320;
-            remainingDelayMins = 480;
             permitsList = [];
-            await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, remainingDelayMins, permitsList }, { merge: true });
+            await window.setDoc(docRef, { savedMonth: currentMonth, remainingTotalMins, permitsList }, { merge: true });
         }
         
         isDataLoaded = true;
         updateUI();
     } catch (e) {
-        console.error("خطأ في جلب البيانات:", e);
+        console.error("خطأ في جلب بيانات التصاريح:", e);
         if (!isDataLoaded) {
             isDataLoaded = true;
             updateUI();
@@ -474,11 +328,10 @@ async function saveDataToCloud() {
         await window.setDoc(docRef, {
             savedMonth: currentMonth,
             remainingTotalMins: Number(remainingTotalMins),
-            remainingDelayMins: Number(remainingDelayMins),
             permitsList: permitsList
         }, { merge: true });
     } catch (e) {
-        console.error("خطأ في الحفظ:", e);
+        console.error("خطأ في حفظ التصريح:", e);
     }
 }
 
@@ -491,68 +344,9 @@ function formatMinutesToReadable(totalMins) {
     return `${m} دقيقة`;
 }
 
-function getShiftTimes() {
-    const shiftVal = document.getElementById('shiftSelect').value;
-    let start = "07:15", end = "15:15";
-    if(shiftVal !== 'custom') {
-        const parts = shiftVal.split('-');
-        start = parts[0]; end = parts[1];
-    } else {
-        start = document.getElementById('customStart').value || "07:15";
-        end = document.getElementById('customEnd').value || "15:15";
-    }
-    return { start, end };
-}
-
-function getCalcShiftTimes() {
-    const shiftVal = document.getElementById('calcShiftSelect').value;
-    let start = "07:15", end = "15:15";
-    if(shiftVal !== 'custom') {
-        const parts = shiftVal.split('-');
-        start = parts[0]; end = parts[1];
-    } else {
-        start = document.getElementById('calcCustomStart').value || "07:15";
-        end = document.getElementById('calcCustomEnd').value || "15:15";
-    }
-    return { start, end };
-}
-
-function formatTime12h(timeStr) {
-    if (!timeStr) return '';
-    let [h, m] = timeStr.split(':').map(Number);
-    let period = 'ص';
-    if (h >= 12) {
-        period = 'م';
-        if (h > 12) h -= 12;
-    }
-    if (h === 0) h = 12;
-    return `${h}:${String(m).padStart(2, '0')} ${period}`;
-}
-
 function updateUI() {
-    if (isNaN(remainingTotalMins) || remainingTotalMins > 1320) remainingTotalMins = 1320;
-    if (remainingTotalMins < 0) remainingTotalMins = 0;
-    if (isNaN(remainingDelayMins)) remainingDelayMins = 480;
-    
-    document.getElementById('remainingHoursDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
-    document.getElementById('remainingDelayDisplay').innerText = formatMinutesToReadable(remainingDelayMins);
-
-    const dynamicBtn = document.getElementById('dynamicCalcBtn');
-    const calcSection = document.getElementById('calcSection');
-    const calcBoxTitle = document.getElementById('calcBoxTitle');
-    
-    if (remainingTotalMins < 960 && remainingTotalMins >= 480) {
-        dynamicBtn.style.display = 'block';
-        dynamicBtn.innerText = '⚡ حاسبة توزيع التصريح على (يومين)';
-        calcBoxTitle.innerText = '⚡ حاسبة وقت الخروج (توزيع على يومين):';
-    } else if (remainingTotalMins < 480 && remainingTotalMins > 0) {
-        dynamicBtn.style.display = 'block';
-        dynamicBtn.innerText = '⚡ حاسبة وقت الخروج (ليوم واحد)';
-        calcBoxTitle.innerText = '⚡ حاسبة وقت الخروج (ليوم واحد):';
-    } else {
-        dynamicBtn.style.display = 'none';
-        calcSection.style.display = 'none';
-    }
+    if (isNaN(remainingTotalMins)) remainingTotalMins = 1320;
+    document.getElementById('remainingPermitsDisplay').innerText = formatMinutesToReadable(remainingTotalMins);
 
     const tbody = document.getElementById('permitsTableBody');
     tbody.innerHTML = '';
@@ -571,166 +365,62 @@ function updateUI() {
 }
 
 window.addPermit = async function() {
-    const selHours = parseInt(document.getElementById('permitHoursSelect').value) || 0;
-    const selMins = parseInt(document.getElementById('permitMinsSelect').value) || 0;
-    const exitTime = document.getElementById('exitTimeInput').value;
+    const minsInput = document.getElementById('permitMinutes').value;
     const selectedDate = document.getElementById('permitDateInput').value;
-    
-    let permitMins = 0;
-    let recordedExitTimeStr = '';
 
-    if (selHours === 0 && selMins === 0 && exitTime) {
-        const times = getShiftTimes();
-        const [startH, startM] = times.start.split(':').map(Number);
-        const [endH, endM] = times.end.split(':').map(Number);
-        const [exitH, exitM] = exitTime.split(':').map(Number);
-        
-        let startTotalMins = startH * 60 + startM;
-        let endTotalMins = endH * 60 + endM;
-        let exitTotalMins = exitH * 60 + exitM;
-
-        if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
-        if (exitTotalMins < startTotalMins) exitTotalMins += 24 * 60;
-        
-        if (exitTotalMins > endTotalMins) {
-            alert('وقت الخروج المدخل يتجاوز وقت نهاية الشفت!');
-            return;
-        }
-        
-        permitMins = endTotalMins - exitTotalMins;
-        
-        if (permitMins <= 0) {
-            alert('وقت الخروج يساوي نهاية الشفت (لا يوجد استئذان)!');
-            return;
-        }
-        
-        recordedExitTimeStr = formatTime12h(exitTime);
-    } else {
-        permitMins = (selHours * 60) + selMins;
-        const times = getShiftTimes();
-        const [startH, startM] = times.start.split(':').map(Number);
-        const [endH, endM] = times.end.split(':').map(Number);
-        
-        let startTotalMins = startH * 60 + startM;
-        let endTotalMins = endH * 60 + endM;
-        if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
-        
-        let exitTotalMins = endTotalMins - permitMins;
-        if (exitTotalMins < 0) exitTotalMins += 24 * 60;
-        
-        let exH = Math.floor(exitTotalMins / 60) % 24;
-        let exM = exitTotalMins % 60;
-        recordedExitTimeStr = formatTime12h(`${String(exH).padStart(2,'0')}:${String(exM).padStart(2,'0')}`);
-    }
-
-    if (permitMins <= 0) {
-        alert('الرجاء اختيار عدد الساعات والدقائق أو تحديد وقت خروج دقيق');
+    if (!minsInput || Number(minsInput) <= 0) {
+        alert('الرجاء إدخال عدد دقايق صحيح للتصريح!');
         return;
     }
 
+    const permitMins = Number(minsInput);
     if (permitMins > remainingTotalMins) {
-        alert(`❌ ساعات التصريح لاتكفي!\nرصيدك المتبقي فقط ${formatMinutesToReadable(remainingTotalMins)}.`);
+        alert(`❌ رصيد التصاريح المتبقي لا يكفي!\nالرصيد الحالي هو ${formatMinutesToReadable(remainingTotalMins)} فقط.`);
         return;
     }
 
     remainingTotalMins -= permitMins;
-    
+
     let dateStr = selectedDate;
     if (selectedDate) {
         const dObj = new Date(selectedDate);
         dateStr = dObj.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
     }
-    const finalRecordStr = dateStr + ' - ' + recordedExitTimeStr;
 
-    permitsList.push({ date: finalRecordStr, totalMins: permitMins });
-    
-    document.getElementById('permitHoursSelect').value = '0';
-    document.getElementById('permitMinsSelect').value = '0';
-    document.getElementById('exitTimeInput').value = '';
-    
+    permitsList.push({ date: dateStr, totalMins: permitMins });
+    document.getElementById('permitMinutes').value = '';
+
     updateUI();
     await saveDataToCloud();
-}
-
-window.calculateInfo = function() {
-    const times = getCalcShiftTimes();
-    const [startH, startM] = times.start.split(':').map(Number);
-    const [endH, endM] = times.end.split(':').map(Number);
-    
-    let startTotalMins = startH * 60 + startM;
-    let endTotalMins = endH * 60 + endM;
-    if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
-    
-    const shiftTotalMins = endTotalMins - startTotalMins;
-
-    const selectedDate = document.getElementById('calcDateInput').value;
-    let dObj = selectedDate ? new Date(selectedDate) : new Date();
-    let dateStr1 = dObj.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
-
-    const resultBox = document.getElementById('calcResultBox');
-    const p1 = document.getElementById('resText1');
-    const p2 = document.getElementById('resText2');
-
-    if (remainingTotalMins >= 480 && remainingTotalMins < 960) {
-        const remainderAfterDay2 = remainingTotalMins - 480;
-        const workMinsDay1 = shiftTotalMins - remainderAfterDay2;
-
-        let exit1TotalMins = (startTotalMins + workMinsDay1) % (24 * 60);
-        let ex1H = Math.floor(exit1TotalMins / 60);
-        let ex1M = exit1TotalMins % 60;
-        let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
-
-        let dObj2 = new Date(dObj);
-        dObj2.setDate(dObj2.getDate() + 1);
-        let dateStr2 = dObj2.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
-
-        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تداوم ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
-        p2.innerHTML = `📌 <b>اليوم الثاني (${dateStr2}):</b> <b>بصم واطلع</b> (يخصم 8 ساعات كاملة).`;
-        p2.style.display = 'block';
-    } else if (remainingTotalMins < 480 && remainingTotalMins > 0) {
-        const workMinsDay1 = shiftTotalMins - remainingTotalMins;
-
-        let exit1TotalMins = (startTotalMins + workMinsDay1) % (24 * 60);
-        let ex1H = Math.floor(exit1TotalMins / 60);
-        let ex1M = exit1TotalMins % 60;
-        let exit1Str = formatTime12h(`${String(ex1H).padStart(2,'0')}:${String(ex1M).padStart(2,'0')}`);
-
-        p1.innerHTML = `📌 <b>اليوم الأول (${dateStr1}):</b> تداوم ${formatMinutesToReadable(workMinsDay1)} ← وقت الخروج: <b>${exit1Str}</b>.`;
-        p2.style.display = 'none';
-    }
-
-    resultBox.style.display = 'block';
+    alert('تم حفظ وخصم التصريح بنجاح!');
 }
 
 window.editPermit = async function(index) {
     const oldMins = permitsList[index].totalMins;
-    const oldH = Math.floor(oldMins / 60);
-    const oldM = oldMins % 60;
-    
-    const newHoursInput = prompt('عدل عدد ساعات التصريح:', oldH);
-    if (newHoursInput === null) return;
-    const newMinsInput = prompt('عدل عدد دقائق التصريح:', oldM);
-    if (newMinsInput === null) return;
-    
-    const newH = parseInt(newHoursInput) || 0;
-    const newM = parseInt(newMinsInput) || 0;
-    const newTotalMins = (newH * 60) + newM;
+    const newMinsInput = prompt('أدخل عدد الدقائق الجديد للتصريح:', oldMins);
+    if (!newMinsInput || Number(newMinsInput) <= 0) return;
 
-    if (newTotalMins <= 0) return alert('قيمة غير صالحة');
+    const newMins = Number(newMinsInput);
+    const diffMins = newMins - oldMins;
 
-    const diffMins = newTotalMins - oldMins;
-    if (diffMins > remainingTotalMins) return alert('الرصيد المتبقي لا يكفي!');
+    if (diffMins > remainingTotalMins) {
+        alert('رصيد التصاريح المتبقي لا يكفي لهذا التعديل!');
+        return;
+    }
 
     remainingTotalMins -= diffMins;
-    permitsList[index].totalMins = newTotalMins;
+    permitsList[index].totalMins = newMins;
+
     updateUI();
     await saveDataToCloud();
 }
 
 window.deletePermit = async function(index) {
-    if (confirm('هل أنت متأكد من حذف هذا التصريح؟')) {
-        remainingTotalMins = Number(remainingTotalMins) + Number(permitsList[index].totalMins);
+    if (confirm('هل أنت متأكد من حذف هذا التصريح؟ (ستعود الدقائق لرصيد التصاريح العام)')) {
+        const restoredMins = Number(permitsList[index].totalMins);
+        remainingTotalMins = Number(remainingTotalMins) + restoredMins;
         if (remainingTotalMins > 1320) remainingTotalMins = 1320;
+
         permitsList.splice(index, 1);
         updateUI();
         await saveDataToCloud();

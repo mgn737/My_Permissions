@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم - إدارة التأخيرات</title>
-    <!-- استدعاء مكتبات Firebase السحابية -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
@@ -34,7 +33,6 @@
     </script>
 
     <style>
-        /* المتغيرات الأساسية (الوضع النهاري) */
         :root {
             --bg-color: #f4f7f6;
             --text-color: #333;
@@ -52,7 +50,6 @@
             --table-border: #ddd;
         }
 
-        /* المتغيرات للوضع الليلي (أزرق ليلي) */
         .dark-mode {
             --bg-color: #0f172a;
             --text-color: #e2e8f0;
@@ -103,9 +100,10 @@
         .header-btns-group {
             display: flex;
             gap: 8px;
+            align-items: center;
         }
 
-        .back-btn, .logout-btn, .theme-btn {
+        .back-btn, .logout-btn {
             color: white;
             border: none;
             padding: 6px 12px;
@@ -117,7 +115,22 @@
         }
         .back-btn { background-color: #2980b9; }
         .logout-btn { background-color: #e74c3c; }
-        .theme-btn { background-color: #f39c12; transition: 0.3s; font-weight: bold; }
+        
+        .theme-icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        .theme-icon-btn:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+        .dark-mode .theme-icon-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
         
         .card-stats {
             background-color: var(--stats-bg);
@@ -199,7 +212,7 @@
     <div class="header-flex">
         <div class="header-btns-group">
             <a href="home.html" class="back-btn">الرئيسية</a>
-            <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()">🌙 ليلي</button>
+            <button id="themeToggleBtn" class="theme-icon-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
         </div>
         <h2>إدارة التأخيرات الشهرية</h2>
         <button class="logout-btn" onclick="logout()">خروج</button>
@@ -260,8 +273,7 @@ function initThemeBtn() {
     const isDark = document.body.classList.contains('dark-mode');
     const btn = document.getElementById('themeToggleBtn');
     if (btn) {
-        btn.innerHTML = isDark ? '☀️ نهاري' : '🌙 ليلي';
-        btn.style.backgroundColor = isDark ? '#334155' : '#f39c12';
+        btn.innerHTML = isDark ? '☀️' : '🌙';
     }
 }
 

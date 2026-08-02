@@ -5,38 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول - نظام إدارة التصاريح</title>
     <style>
+        /* المتغيرات الأساسية (الوضع النهاري) */
+        :root {
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --card-bg: #fff;
+            --title-color: #2c3e50;
+            --input-bg: #f0f2f5;
+            --input-border: #ccc;
+        }
+
+        /* المتغيرات للوضع الليلي */
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --title-color: #e0e0e0;
+            --input-bg: #2c2c2c;
+            --input-border: #444;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
         .login-card {
-            background-color: #fff;
+            background-color: var(--card-bg);
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 400px;
             text-align: center;
+            position: relative;
+            transition: background-color 0.3s;
         }
-        h2 { color: #2c3e50; margin-bottom: 20px; font-size: 20px; }
+
+        /* زر الوضع الليلي */
+        .theme-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        h2 { color: var(--title-color); margin-bottom: 20px; font-size: 20px; transition: color 0.3s; }
         .form-group { margin-bottom: 15px; text-align: right; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; color: var(--text-color); transition: color 0.3s; }
         input {
             width: 100%;
             padding: 10px;
             font-size: 14px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
             border-radius: 6px;
             box-sizing: border-box;
-            background-color: #f0f2f5;
+            background-color: var(--input-bg);
+            color: var(--text-color);
             text-align: right;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
         .login-btn {
             width: 100%;
@@ -49,6 +91,7 @@
             font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
+            transition: background 0.3s;
         }
         .login-btn:hover { background-color: #219653; }
         .error-msg { color: #e74c3c; font-size: 13px; margin-top: 10px; display: none; }
@@ -56,7 +99,15 @@
 </head>
 <body>
 
+<!-- سكريبت لمنع وميض الشاشة البيضاء عند التحميل إذا كان الوضع الليلي مفعل -->
+<script>
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
+
 <div class="login-card">
+    <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()">🌙 ليلي</button>
     <h2>تسجيل الدخول لنظام التصاريح</h2>
     <div class="form-group">
         <label>اسم المستخدم:</label>
@@ -71,6 +122,24 @@
 </div>
 
 <script>
+function initThemeBtn() {
+    const isDark = document.body.classList.contains('dark-mode');
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) {
+        btn.innerHTML = isDark ? '☀️ نهاري' : '🌙 ليلي';
+        btn.style.backgroundColor = isDark ? '#2c3e50' : '#f39c12';
+    }
+}
+
+window.toggleTheme = function() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    initThemeBtn();
+}
+
+initThemeBtn();
+
 function login() {
     const user = document.getElementById('usernameInput').value.trim();
     const pass = document.getElementById('passwordInput').value.trim();

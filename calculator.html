@@ -5,24 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>حاسبة وقت الخروج (التصاريح)</title>
     <style>
+        :root {
+            /* ألوان الوضع النهاري (الافتراضي) */
+            --bg-color: #f4f7f6;
+            --container-bg: #fff;
+            --text-color: #333;
+            --title-color: #2c3e50;
+            --input-bg: #f0f2f5;
+            --input-border: #ccc;
+            --btn-bg: #2980b9;
+            --btn-hover: #1f618d;
+            --result-bg: #e8f6f3;
+            --result-border: #1abc9c;
+            --highlight-color: #d35400;
+            --icon-color: #2c3e50;
+        }
+
+        /* ألوان الوضع الليلي (أزرق ليلي) */
+        body.dark-mode {
+            --bg-color: #0b1325; /* أزرق ليلي غامق جداً للخلفية */
+            --container-bg: #152238; /* أزرق ليلي للحاوية */
+            --text-color: #e2e8f0;
+            --title-color: #f8fafc;
+            --input-bg: #1e2f4d; /* أزرق فاتح قليلاً للخانات */
+            --input-border: #2a4365;
+            --btn-bg: #3b82f6;
+            --btn-hover: #2563eb;
+            --result-bg: #1e2f4d;
+            --result-border: #3b82f6;
+            --highlight-color: #fbd38d; /* لون برتقالي/ذهبي متناسق مع الأزرق */
+            --icon-color: #f8fafc;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
+
+        /* زر الوضع الليلي/النهاري */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--icon-color);
+            padding: 5px;
+            transition: transform 0.2s ease, color 0.3s ease;
+        }
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        .theme-toggle svg {
+            width: 28px;
+            height: 28px;
+        }
+
         .container {
-            background-color: #fff;
+            background-color: var(--container-bg);
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             width: 90%;
             max-width: 400px;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
         .logo {
             display: block;
@@ -33,9 +88,10 @@
         }
         h2 {
             text-align: center;
-            color: #2c3e50;
+            color: var(--title-color);
             margin-bottom: 20px;
             font-size: 20px;
+            transition: color 0.3s ease;
         }
         .form-group {
             margin-bottom: 15px;
@@ -43,36 +99,39 @@
         label {
             display: block;
             margin-bottom: 5px;
-            color: #333;
+            color: var(--text-color);
             font-weight: bold;
             font-size: 13px;
             text-align: right;
         }
-        /* تصغير الخانات وجعلها متناسقة على اليمين */
         input[type="time"], select {
             width: 50%;
             padding: 8px;
             font-size: 14px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
             border-radius: 6px;
             box-sizing: border-box;
             font-family: inherit;
-            background-color: #f0f2f5;
+            background-color: var(--input-bg);
+            color: var(--text-color);
             text-align: right;
             display: block;
             margin-right: 0;
-            margin-left: auto; /* يخلي الخانة تنجرف لليمين */
+            margin-left: auto;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
         input[type="number"] {
             width: 100%;
             padding: 8px;
             font-size: 14px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
             border-radius: 6px;
             box-sizing: border-box;
             font-family: inherit;
-            background-color: #f0f2f5;
+            background-color: var(--input-bg);
+            color: var(--text-color);
             text-align: right;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
         .permit-group {
             display: flex;
@@ -82,10 +141,12 @@
             flex: 1;
             margin-bottom: 0;
         }
-        button {
+        
+        /* كلاس خاص بزر الحساب حتى لا يتأثر زر الليلي */
+        .calc-btn {
             width: 100%;
             padding: 12px;
-            background-color: #2980b9;
+            background-color: var(--btn-bg);
             color: white;
             border: none;
             border-radius: 8px;
@@ -93,31 +154,47 @@
             font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
+            transition: background-color 0.3s ease;
         }
-        button:hover {
-            background-color: #1f618d;
+        .calc-btn:hover {
+            background-color: var(--btn-hover);
         }
+        
         .result-box {
             margin-top: 20px;
             padding: 15px;
-            background-color: #e8f6f3;
-            border-right: 5px solid #1abc9c;
+            background-color: var(--result-bg);
+            border-right: 5px solid var(--result-border);
             border-radius: 4px;
             display: none;
             text-align: right;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .result-box p {
             margin: 8px 0;
             font-size: 14px;
             line-height: 1.6;
+            color: var(--text-color);
         }
         .highlight {
             font-weight: bold;
-            color: #d35400;
+            color: var(--highlight-color);
         }
     </style>
 </head>
 <body>
+
+<!-- زر التبديل بين الليل والنهار -->
+<button class="theme-toggle" onclick="toggleTheme()" title="تبديل المظهر">
+    <!-- أيقونة القمر (للوضع النهاري) -->
+    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+    </svg>
+    <!-- أيقونة الشمس (للوضع الليلي) -->
+    <svg id="sun-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+</button>
 
 <div class="container">
     <img src="IMG_3974.jpeg" class="logo" alt="شعار">
@@ -153,7 +230,7 @@
         </div>
     </div>
 
-    <button onclick="calculateExitTime()">احسب وقت الخروج</button>
+    <button class="calc-btn" onclick="calculateExitTime()">احسب وقت الخروج</button>
 
     <div class="result-box" id="resultBox">
         <p id="resultText"></p>
@@ -161,6 +238,16 @@
 </div>
 
 <script>
+// دالة تبديل الوضع الليلي
+function toggleTheme() {
+    const body = document.body;
+    body.classList.toggle('dark-mode');
+    
+    const isDark = body.classList.contains('dark-mode');
+    document.getElementById('moon-icon').style.display = isDark ? 'none' : 'block';
+    document.getElementById('sun-icon').style.display = isDark ? 'block' : 'none';
+}
+
 function format12Hour(totalMins) {
     let hours24 = Math.floor((totalMins / 60) % 24);
     let mins = totalMins % 60;

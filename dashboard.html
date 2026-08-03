@@ -126,7 +126,17 @@
         }
         .back-btn { background-color: #2980b9; }
         .logout-btn { background-color: #e74c3c; }
-        .theme-btn { background-color: #f39c12; transition: 0.3s; font-weight: bold; }
+        .theme-btn { 
+            background-color: transparent; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 18px; 
+            padding: 4px 6px; 
+            border-radius: 6px; 
+            transition: background-color 0.3s;
+        }
+        .theme-btn:hover { background-color: rgba(0,0,0,0.05); }
+        .dark-mode .theme-btn:hover { background-color: rgba(255,255,255,0.1); }
         
         .card-stats {
             background-color: var(--stats-bg);
@@ -248,9 +258,9 @@
         
         <h2 id="pageTitle">إدارة التصاريح الشهرية</h2>
 
-        <!-- مجموعة الأزرار في اليسار (زر الوضع الليلي/النهاري بجانب زر الخروج مباشرة) -->
+        <!-- مجموعة الأزرار في اليسار (أيقونة الوضع الليلي/النهاري بدون كلام بجانب زر الخروج مباشرة) -->
         <div class="header-btns-group">
-            <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()">🌙 ليلي</button>
+            <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
             <button class="logout-btn" onclick="logout()">خروج</button>
         </div>
     </div>
@@ -373,13 +383,12 @@
 </div>
 
 <script>
-// إعداد وتشغيل النمط الليلي/النهاري
+// إعداد وتشغيل النمط الليلي/النهاري (أيقونة فقط بدون كلام)
 function initThemeBtn() {
     const isDark = document.body.classList.contains('dark-mode');
     const btn = document.getElementById('themeToggleBtn');
     if (btn) {
-        btn.innerHTML = isDark ? '☀️ نهاري' : '🌙 ليلي';
-        btn.style.backgroundColor = isDark ? '#2c3e50' : '#f39c12';
+        btn.innerHTML = isDark ? '☀️' : '🌙';
     }
 }
 

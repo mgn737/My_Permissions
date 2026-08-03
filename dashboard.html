@@ -111,6 +111,7 @@
         .header-btns-group {
             display: flex;
             gap: 8px;
+            align-items: center;
         }
 
         .back-btn, .logout-btn, .theme-btn {
@@ -242,12 +243,16 @@
 
 <div class="container">
     <div class="header-flex">
-        <div class="header-btns-group">
-            <a href="home.html" class="back-btn">الرئيسية</a>
-            <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()">🌙 ليلي</button>
-        </div>
+        <!-- زر الرئيسية في اليمين -->
+        <a href="home.html" class="back-btn">الرئيسية</a>
+        
         <h2 id="pageTitle">إدارة التصاريح الشهرية</h2>
-        <button class="logout-btn" onclick="logout()">خروج</button>
+
+        <!-- مجموعة الأزرار في اليسار (زر الوضع الليلي/النهاري بجانب زر الخروج مباشرة) -->
+        <div class="header-btns-group">
+            <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()">🌙 ليلي</button>
+            <button class="logout-btn" onclick="logout()">خروج</button>
+        </div>
     </div>
 
     <div class="card-stats">

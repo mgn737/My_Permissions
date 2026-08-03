@@ -18,7 +18,6 @@
             --result-bg: #e8f6f3;
             --result-border: #1abc9c;
             --highlight-color: #d35400;
-            --icon-color: #2c3e50;
         }
 
         /* ألوان الوضع الليلي (أزرق ليلي) */
@@ -34,7 +33,6 @@
             --result-bg: #1e2f4d;
             --result-border: #3b82f6;
             --highlight-color: #fbd38d; /* لون برتقالي/ذهبي متناسق مع الأزرق */
-            --icon-color: #f8fafc;
         }
 
         body {
@@ -50,24 +48,25 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* زر الوضع الليلي/النهاري */
-        .theme-toggle {
+        /* زر الوضع الليلي/النهاري الموحد */
+        .theme-icon-btn {
             position: absolute;
             top: 20px;
             left: 20px;
             background: none;
             border: none;
             cursor: pointer;
-            color: var(--icon-color);
+            font-size: 22px;
             padding: 5px;
-            transition: transform 0.2s ease, color 0.3s ease;
+            border-radius: 50%;
+            transition: background 0.3s, transform 0.2s;
         }
-        .theme-toggle:hover {
+        .theme-icon-btn:hover {
             transform: scale(1.1);
+            background-color: rgba(0,0,0,0.1);
         }
-        .theme-toggle svg {
-            width: 28px;
-            height: 28px;
+        .dark-mode .theme-icon-btn:hover {
+            background-color: rgba(255,255,255,0.1);
         }
 
         .container {
@@ -184,17 +183,15 @@
 </head>
 <body>
 
-<!-- زر التبديل بين الليل والنهار -->
-<button class="theme-toggle" onclick="toggleTheme()" title="تبديل المظهر">
-    <!-- أيقونة القمر (للوضع النهاري) -->
-    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-    </svg>
-    <!-- أيقونة الشمس (للوضع الليلي) -->
-    <svg id="sun-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-    </svg>
-</button>
+<!-- سكريبت لمنع الشاشة البيضاء عند التحديث إذا كان الوضع الليلي مفعل -->
+<script>
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
+
+<!-- زر التبديل بين الليل والنهار الموحد -->
+<button id="themeToggleBtn" class="theme-icon-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
 
 <div class="container">
     <img src="IMG_3974.jpeg" class="logo" alt="شعار">
@@ -238,15 +235,25 @@
 </div>
 
 <script>
-// دالة تبديل الوضع الليلي
-function toggleTheme() {
-    const body = document.body;
-    body.classList.toggle('dark-mode');
-    
-    const isDark = body.classList.contains('dark-mode');
-    document.getElementById('moon-icon').style.display = isDark ? 'none' : 'block';
-    document.getElementById('sun-icon').style.display = isDark ? 'block' : 'none';
+// --- أكواد النمط الليلي المطابقة لباقي الصفحات ---
+function initThemeBtn() {
+    const isDark = document.body.classList.contains('dark-mode');
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) {
+        btn.innerHTML = isDark ? '☀️' : '🌙';
+    }
 }
+
+window.toggleTheme = function() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    initThemeBtn();
+}
+
+// تشغيل الدالة عند فتح الصفحة لضبط الزر
+initThemeBtn();
+// ----------------------------------------
 
 function format12Hour(totalMins) {
     let hours24 = Math.floor((totalMins / 60) % 24);

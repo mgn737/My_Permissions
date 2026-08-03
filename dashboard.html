@@ -34,34 +34,87 @@
     </script>
 
     <style>
+        /* المتغيرات الأساسية (الوضع النهاري) */
+        :root {
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --card-bg: #fff;
+            --border-color: #eee;
+            --input-bg: #f0f2f5;
+            --input-border: #ccc;
+            --title-color: #2c3e50;
+            --stats-bg: #e8f6f3;
+            --stats-border: #1abc9c;
+            --stats-title: #16a085;
+            --stats-num: #2c3e50;
+            --stats-small: #7f8c8d;
+            --calc-bg: #fef9e7;
+            --calc-border: #f39c12;
+            --calc-title: #d35400;
+            --result-bg: #fff;
+            --table-th-bg: #f4f7f6;
+            --table-border: #ddd;
+        }
+
+        /* المتغيرات للوضع الليلي */
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --border-color: #333;
+            --input-bg: #2c2c2c;
+            --input-border: #444;
+            --title-color: #e0e0e0;
+            --stats-bg: #0b2b26;
+            --stats-border: #16a085;
+            --stats-title: #48c9b0;
+            --stats-num: #e0e0e0;
+            --stats-small: #aaa;
+            --calc-bg: #332200;
+            --calc-border: #b9770e;
+            --calc-title: #f39c12;
+            --result-bg: #1e1e1e;
+            --table-th-bg: #2c2c2c;
+            --table-border: #444;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
+            transition: background-color 0.3s, color 0.3s;
         }
         .container {
-            background-color: #fff;
+            background-color: var(--card-bg);
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 500px;
+            transition: background-color 0.3s;
         }
         .header-flex {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid var(--border-color);
             padding-bottom: 10px;
             margin-bottom: 20px;
+            transition: border-color 0.3s;
         }
-        h2 { color: #2c3e50; font-size: 18px; margin: 0; }
-        .back-btn, .logout-btn {
-            background-color: #e74c3c;
+        h2 { color: var(--title-color); font-size: 18px; margin: 0; transition: color 0.3s; }
+        
+        .header-btns-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .back-btn, .logout-btn, .theme-btn {
             color: white;
             border: none;
             padding: 6px 12px;
@@ -69,20 +122,34 @@
             cursor: pointer;
             font-size: 13px;
             text-decoration: none;
+            display: inline-block;
         }
         .back-btn { background-color: #2980b9; }
+        .logout-btn { background-color: #e74c3c; }
+        .theme-btn { 
+            background-color: transparent; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 18px; 
+            padding: 4px 6px; 
+            border-radius: 6px; 
+            transition: background-color 0.3s;
+        }
+        .theme-btn:hover { background-color: rgba(0,0,0,0.05); }
+        .dark-mode .theme-btn:hover { background-color: rgba(255,255,255,0.1); }
         
         .card-stats {
-            background-color: #e8f6f3;
-            border: 1px solid #1abc9c;
+            background-color: var(--stats-bg);
+            border: 1px solid var(--stats-border);
             padding: 15px;
             border-radius: 8px;
             text-align: center;
             margin-bottom: 20px;
+            transition: background-color 0.3s, border-color 0.3s;
         }
-        .card-stats h3 { margin: 0 0 5px 0; color: #16a085; font-size: 15px; }
-        .card-stats span { font-size: 20px; font-weight: bold; color: #2c3e50; display: block; }
-        .card-stats small { font-size: 13px; color: #7f8c8d; margin-top: 5px; display: block; }
+        .card-stats h3 { margin: 0 0 5px 0; color: var(--stats-title); font-size: 15px; transition: color 0.3s; }
+        .card-stats span { font-size: 20px; font-weight: bold; color: var(--stats-num); display: block; transition: color 0.3s; }
+        .card-stats small { font-size: 13px; color: var(--stats-small); margin-top: 5px; display: block; transition: color 0.3s; }
 
         .dynamic-calc-btn {
             width: 100%;
@@ -98,43 +165,48 @@
             display: none;
         }
         .calc-box {
-            background-color: #fef9e7;
-            border: 2px dashed #f39c12;
+            background-color: var(--calc-bg);
+            border: 2px dashed var(--calc-border);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
             display: none;
+            transition: background-color 0.3s, border-color 0.3s;
         }
-        .calc-box h4 { margin: 0 0 10px 0; color: #d35400; font-size: 14px; text-align: right; }
+        .calc-box h4 { margin: 0 0 10px 0; color: var(--calc-title); font-size: 14px; text-align: right; transition: color 0.3s; }
         .result-box {
-            background-color: #fff;
-            border: 1px solid #f39c12;
+            background-color: var(--result-bg);
+            border: 1px solid var(--calc-border);
             padding: 12px;
             border-radius: 6px;
             margin-top: 12px;
             text-align: right;
             display: none;
+            transition: background-color 0.3s, border-color 0.3s;
         }
-        .result-box p { margin: 6px 0; font-size: 13px; color: #2c3e50; }
+        .result-box p { margin: 6px 0; font-size: 13px; color: var(--text-color); transition: color 0.3s; }
 
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; color: var(--text-color); transition: color 0.3s; }
         select, input {
             width: 100%;
             padding: 9px;
             font-size: 14px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
             border-radius: 6px;
             box-sizing: border-box;
-            background-color: #f0f2f5;
+            background-color: var(--input-bg);
+            color: var(--text-color);
             text-align: right;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
         .note-text {
             font-size: 11px;
-            color: #7f8c8d;
+            color: var(--stats-small);
             margin-top: 4px;
             display: block;
             text-align: right;
+            transition: color 0.3s;
         }
         .action-btn {
             width: 100%;
@@ -151,6 +223,8 @@
         .action-btn:hover { background-color: #219653; }
         .btn-calc { background-color: #e67e22; }
 
+        h3 { color: var(--title-color); transition: color 0.3s; }
+
         table {
             width: 100%;
             margin-top: 20px;
@@ -158,22 +232,37 @@
             font-size: 12px;
         }
         th, td {
-            border: 1px solid #ddd;
+            border: 1px solid var(--table-border);
             padding: 8px;
             text-align: center;
+            transition: border-color 0.3s;
         }
-        th { background-color: #f4f7f6; color: #2c3e50; }
+        th { background-color: var(--table-th-bg); color: var(--title-color); transition: background-color 0.3s, color 0.3s; }
         .edit-btn { background-color: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 4px; }
         .delete-btn { background-color: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
+<!-- سكريبت لمنع الشاشة البيضاء عند التحديث إذا كان الوضع الليلي مفعل -->
+<script>
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
+
 <div class="container">
     <div class="header-flex">
+        <!-- زر الرئيسية في اليمين -->
         <a href="home.html" class="back-btn">الرئيسية</a>
+        
         <h2 id="pageTitle">إدارة التصاريح الشهرية</h2>
-        <button class="logout-btn" onclick="logout()">خروج</button>
+
+        <!-- مجموعة الأزرار في اليسار (أيقونة الوضع الليلي/النهاري بدون كلام بجانب زر الخروج مباشرة) -->
+        <div class="header-btns-group">
+            <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
+            <button class="logout-btn" onclick="logout()">خروج</button>
+        </div>
     </div>
 
     <div class="card-stats">
@@ -279,7 +368,7 @@
 
     <button class="action-btn" onclick="addPermit()">حفظ وتطبيق التصريح</button>
 
-    <h3 style="margin-top: 25px; font-size: 15px; color: #2c3e50;">سجل التصاريح لهذا الشهر</h3>
+    <h3 style="margin-top: 25px; font-size: 15px;">سجل التصاريح لهذا الشهر</h3>
     <table>
         <thead>
             <tr>
@@ -294,6 +383,24 @@
 </div>
 
 <script>
+// إعداد وتشغيل النمط الليلي/النهاري (أيقونة فقط بدون كلام)
+function initThemeBtn() {
+    const isDark = document.body.classList.contains('dark-mode');
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) {
+        btn.innerHTML = isDark ? '☀️' : '🌙';
+    }
+}
+
+window.toggleTheme = function() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    initThemeBtn();
+}
+
+initThemeBtn();
+
 if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html';
 }

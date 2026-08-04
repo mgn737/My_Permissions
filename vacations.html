@@ -353,6 +353,7 @@
         return hijri;
     }
 
+    // الدالة الذكية المحدثة
     async function checkRenewals() {
         const hDate = getTodayHijri();
         let changed = false;
@@ -364,8 +365,19 @@
             changed = true;
         }
 
-        if (lastMainRenewYear === 0) { lastMainRenewYear = hDate.year; changed = true; }
+        // --- التعديل الذكي لتهيئة المستخدم الجديد ---
+        if (lastMainRenewYear === 0) { 
+            if (hDate.month < renewSettings.month || (hDate.month === renewSettings.month && hDate.day < renewSettings.day)) {
+                // إذا كان التاريخ المطلوب لسه ما جاء هذي السنة، نرجع العداد سنة عشان يجدد لما يجي
+                lastMainRenewYear = hDate.year - 1; 
+            } else {
+                lastMainRenewYear = hDate.year; 
+            }
+            changed = true; 
+        }
+
         if (hDate.year > lastMainRenewYear) {
+            // إذا وصل أو تجاوز تاريخ التجديد في السنة الجديدة
             if (hDate.month > renewSettings.month || (hDate.month === renewSettings.month && hDate.day >= renewSettings.day)) {
                 mainBalance += 36;
                 lastMainRenewYear = hDate.year;
@@ -466,15 +478,31 @@
         document.getElementById('renewMonth').value = renewSettings.month;
     }
 
+    // دالة الحفظ الذكية المحدثة
     window.saveRenewalDate = async function() {
         const d = document.getElementById('renewDay').value;
         const m = document.getElementById('renewMonth').value;
+        
         if(d && m) {
             renewSettings = { day: parseInt(d), month: parseInt(m) };
+            
+            // --- التعديل الذكي عند حفظ إعدادات جديدة ---
+            const hDate = getTodayHijri();
+            
+            // نتحقق: إذا التاريخ اللي حطيته هو تاريخ اليوم أو تاريخ لسه بيجي في الأيام الجاية
+            if (hDate.month < renewSettings.month || (hDate.month === renewSettings.month && hDate.day <= renewSettings.day)) {
+                // نضبط النظام عشان يسمح بالتجديد في نفس هذي السنة
+                if (lastMainRenewYear === hDate.year) {
+                    lastMainRenewYear = hDate.year - 1;
+                }
+            }
+            
             await saveDataToCloud();
             alert("تم حفظ تاريخ التجديد!");
             toggleSettings();
-            checkRenewals();
+            
+            // الفحص مباشرة عشان لو كان التاريخ هو اليوم يجدد فوراً
+            checkRenewals(); 
         }
     }
 

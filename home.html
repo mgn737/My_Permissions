@@ -4,12 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم الرئيسية</title>
+    <!-- استدعاء مكتبات Firebase السحابية -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD10nYcvOM_5s8Hd-MFe2lTsRqkJ7TQ4vA",
+            authDomain: "my--permissions.firebaseapp.com",
+            projectId: "my--permissions",
+            storageBucket: "my--permissions.firebasestorage.app",
+            messagingSenderId: "476127156640",
+            appId: "1:476127156640:web:48f68b18dba796f1a2acc5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.isFirebaseReady = true;
+    </script>
+
     <style>
         :root {
             --bg-color: #f4f7f6;
             --text-color: #333;
             --card-bg: #fff;
             --title-color: #2c3e50;
+            --border-color: #ccc;
         }
 
         .dark-mode {
@@ -17,6 +41,7 @@
             --text-color: #e2e8f0;
             --card-bg: #1e293b;
             --title-color: #f8fafc;
+            --border-color: #444;
         }
 
         body {
@@ -43,10 +68,15 @@
             transition: background-color 0.3s;
         }
         
-        .theme-icon-btn {
+        .header-icons {
             position: absolute;
             top: 20px;
             left: 20px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -55,10 +85,10 @@
             border-radius: 50%;
             transition: background 0.3s;
         }
-        .theme-icon-btn:hover {
+        .icon-btn:hover {
             background-color: rgba(0,0,0,0.1);
         }
-        .dark-mode .theme-icon-btn:hover {
+        .dark-mode .icon-btn:hover {
             background-color: rgba(255,255,255,0.1);
         }
 
@@ -90,6 +120,30 @@
             margin-top: 25px;
         }
         .logout-btn:hover { background-color: #c0392b; }
+
+        /* تنسيق نافذة الإعدادات المنبثقة (Modal) */
+        #homeSettingsModal {
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.6); 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--card-bg); 
+            padding: 25px; 
+            border-radius: 12px; 
+            width: 90%; 
+            max-width: 360px; 
+            text-align: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            border: 1px solid var(--border-color);
+        }
     </style>
 </head>
 <body>
@@ -101,7 +155,11 @@
 </script>
 
 <div class="container">
-    <button id="themeToggleBtn" class="theme-icon-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
+    <!-- أزرار الإعدادات والمظهر في أعلى اليسار -->
+    <div class="header-icons">
+        <button class="icon-btn" onclick="toggleHomeSettings()" title="الإعدادات">⚙️</button>
+        <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
+    </div>
     
     <h2>لوحة التحكم والخدمات</h2>
     
@@ -110,6 +168,29 @@
     <a href="vacations.html" class="action-btn btn-vacation">إدارة الإجازات</a>
     
     <button class="action-btn logout-btn" onclick="logout()">تسجيل الخروج</button>
+</div>
+
+<!-- نافذة الإعدادات والتصفير -->
+<div id="homeSettingsModal">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; color: var(--title-color);">⚙️ إعدادات الحساب</h3>
+        <p style="font-size: 13px; color: #7f8c8d;">المستخدم الحالي: <span id="displayUsername" style="font-weight: bold;"></span></p>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+
+        <h4 style="color: #e74c3c; margin-bottom: 5px;">⚠️ تصفير بيانات الحساب</h4>
+        <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 15px; line-height: 1.5; text-align: right;">
+            سيؤدي هذا الإجراء إلى تصفير كافة الإجازات وسجلاتها، واستعادة الرصيد الافتراضي (36 يوم أساسي / 10 أيام متفرقة).
+        </p>
+
+        <button onclick="resetUserDataFromHome()" style="background-color: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px;">
+            تصفير البيانات الآن
+        </button>
+
+        <button onclick="toggleHomeSettings()" style="background-color: #95a5a6; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">
+            إغلاق
+        </button>
+    </div>
 </div>
 
 <script>
@@ -138,6 +219,65 @@ function logout() {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('currentUser');
     window.location.href = 'index.html';
+}
+
+// التحكم في إظهار وإخفاء نافذة الإعدادات
+window.toggleHomeSettings = function() {
+    const modal = document.getElementById('homeSettingsModal');
+    const userDisplay = document.getElementById('displayUsername');
+    const currentUsername = localStorage.getItem('currentUser') || 'defaultUser';
+    
+    if (userDisplay) userDisplay.innerText = currentUsername;
+    
+    if (modal.style.display === 'flex') {
+        modal.style.display = 'none';
+    } else {
+        modal.style.display = 'flex';
+    }
+}
+
+// دالة تصفير البيانات من الصفحة الرئيسية وحفظها في Firebase
+window.resetUserDataFromHome = async function() {
+    const currentUsername = localStorage.getItem('currentUser');
+    if (!currentUsername) {
+        alert("لم يتم التعرف على المستخدم الحالي!");
+        return;
+    }
+
+    // تأكيد أمان مزدوج لمنع الحذف الخطأ
+    const confirmFirst = confirm("هل أنت متأكد تماماً من رغبتك في تصفير جميع بيانات الإجازات؟");
+    if (!confirmFirst) return;
+
+    const confirmSecond = prompt("للتأكيد، اكتب كلمة (تصفير) في المربع أدناه:");
+    if (confirmSecond !== "تصفير") {
+        alert("تم إلغاء عملية التصفير.");
+        return;
+    }
+
+    try {
+        if (!window.db || !window.doc) {
+            alert("جاري الاتصال بقاعدة البيانات، حاول مرة أخرى بعد قليل.");
+            return;
+        }
+
+        // تصفير جدول الإجازات (vacsData) للسحابية
+        const vacRef = window.doc(window.db, "vacsData", currentUsername);
+        await window.setDoc(vacRef, {
+            mainBalance: 36,
+            scatBalance: 10,
+            renewSettings: { day: 1, month: 1 },
+            lastMainRenewYear: 0,
+            lastScatRenewYear: 0,
+            leavesHistory: []
+        });
+
+        alert("تمت إعادة ضبط وتصفير جميع بيانات الإجازات بنجاح!");
+        toggleHomeSettings();
+
+    } catch (e) {
+        console.error("خطأ أثناء تصفير البيانات:", e);
+        alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+    }
 }
 </script>
 

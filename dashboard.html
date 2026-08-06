@@ -578,7 +578,7 @@ window.addPermit = async function() {
     const selectedDate = document.getElementById('permitDateInput').value;
     
     // ==========================================
-    // الفرع الأول: تصريح عودة (المنطق الجديد)
+    // الفرع الأول: تصريح عودة
     // ==========================================
     if (permitType === 'with_return') {
         const exitTime = document.getElementById('exitTimeInput').value;
@@ -636,7 +636,7 @@ window.addPermit = async function() {
     }
 
     // ==========================================
-    // الفرع الثاني: تصريح بدون عودة (هذا كودك الأصلي 100% بدون تعديل حسابي)
+    // الفرع الثاني: تصريح بدون عودة (المنطق المحدث بناءً على طلبك)
     // ==========================================
     const selHours = parseInt(document.getElementById('permitHoursSelect').value) || 0;
     const selMins = parseInt(document.getElementById('permitMinsSelect').value) || 0;
@@ -645,6 +645,7 @@ window.addPermit = async function() {
     let permitMins = 0;
     let recordedExitTimeStr = '';
 
+    // إذا لم يحدد الساعات والدقائق يدوياً، وتم إدخال وقت الخروج الفعلي
     if (selHours === 0 && selMins === 0 && exitTime) {
         const times = getShiftTimes();
         const [startH, startM] = times.start.split(':').map(Number);
@@ -658,11 +659,13 @@ window.addPermit = async function() {
         if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
         if (exitTotalMins < startTotalMins) exitTotalMins += 24 * 60;
         
-        if (exitTotalMins > endTotalMins) {
-            alert('وقت الخروج المدخل يتجاوز وقت نهاية الشفت!');
+        // التحقق مما إذا كان وقت الخروج بعد نهاية الشفت
+        if (exitTotalMins >= endTotalMins) {
+            alert('وقت الخروج المدخل يتطابق مع نهاية الشفت أو بعده (لا يوجد نقص)!');
             return;
         }
         
+        // حساب النقص: (نهاية الشفت الرسمي) - (وقت الخروج الفعلي)
         permitMins = endTotalMins - exitTotalMins;
         
         if (permitMins <= 0) {
@@ -670,8 +673,9 @@ window.addPermit = async function() {
             return;
         }
         
-        recordedExitTimeStr = formatTime12h(exitTime);
+        recordedExitTimeStr = `خروج مبكر: ${formatTime12h(exitTime)}`;
     } else {
+        // الحساب التقليدي في حال تم اختيار الساعات والدقائق يدوياً
         permitMins = (selHours * 60) + selMins;
         const times = getShiftTimes();
         const [startH, startM] = times.start.split(':').map(Number);

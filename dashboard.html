@@ -34,7 +34,6 @@
     </script>
 
     <style>
-        /* المتغيرات الأساسية (الوضع النهاري) */
         :root {
             --bg-color: #f4f7f6;
             --text-color: #333;
@@ -56,7 +55,6 @@
             --table-border: #ddd;
         }
 
-        /* المتغيرات للوضع الليلي */
         .dark-mode {
             --bg-color: #121212;
             --text-color: #e0e0e0;
@@ -108,11 +106,7 @@
         }
         h2 { color: var(--title-color); font-size: 18px; margin: 0; transition: color 0.3s; }
         
-        .header-btns-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
+        .header-btns-group { display: flex; gap: 8px; align-items: center; }
 
         .back-btn, .logout-btn, .theme-btn {
             color: white;
@@ -152,96 +146,48 @@
         .card-stats small { font-size: 13px; color: var(--stats-small); margin-top: 5px; display: block; transition: color 0.3s; }
 
         .dynamic-calc-btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #f39c12;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 15px;
-            display: none;
+            width: 100%; padding: 12px; background-color: #f39c12; color: white;
+            border: none; border-radius: 8px; font-size: 15px; font-weight: bold;
+            cursor: pointer; margin-bottom: 15px; display: none;
         }
         .calc-box {
-            background-color: var(--calc-bg);
-            border: 2px dashed var(--calc-border);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-            transition: background-color 0.3s, border-color 0.3s;
+            background-color: var(--calc-bg); border: 2px dashed var(--calc-border);
+            padding: 15px; border-radius: 8px; margin-bottom: 20px;
+            display: none; transition: background-color 0.3s, border-color 0.3s;
         }
         .calc-box h4 { margin: 0 0 10px 0; color: var(--calc-title); font-size: 14px; text-align: right; transition: color 0.3s; }
         .result-box {
-            background-color: var(--result-bg);
-            border: 1px solid var(--calc-border);
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 12px;
-            text-align: right;
-            display: none;
-            transition: background-color 0.3s, border-color 0.3s;
+            background-color: var(--result-bg); border: 1px solid var(--calc-border);
+            padding: 12px; border-radius: 6px; margin-top: 12px; text-align: right;
+            display: none; transition: background-color 0.3s, border-color 0.3s;
         }
         .result-box p { margin: 6px 0; font-size: 13px; color: var(--text-color); transition: color 0.3s; }
 
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; text-align: right; color: var(--text-color); transition: color 0.3s; }
         select, input {
-            width: 100%;
-            padding: 9px;
-            font-size: 14px;
-            border: 1px solid var(--input-border);
-            border-radius: 6px;
-            box-sizing: border-box;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            text-align: right;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            width: 100%; padding: 9px; font-size: 14px; border: 1px solid var(--input-border);
+            border-radius: 6px; box-sizing: border-box; background-color: var(--input-bg);
+            color: var(--text-color); text-align: right; transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
-        .note-text {
-            font-size: 11px;
-            color: var(--stats-small);
-            margin-top: 4px;
-            display: block;
-            text-align: right;
-            transition: color 0.3s;
-        }
+        .note-text { font-size: 11px; color: var(--stats-small); margin-top: 4px; display: block; text-align: right; transition: color 0.3s; }
+        
         .action-btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 5px;
+            width: 100%; padding: 12px; background-color: #27ae60; color: white;
+            border: none; border-radius: 8px; font-size: 16px; font-weight: bold;
+            cursor: pointer; margin-top: 5px;
         }
         .action-btn:hover { background-color: #219653; }
         .btn-calc { background-color: #e67e22; }
 
         h3 { color: var(--title-color); transition: color 0.3s; }
 
-        table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        th, td {
-            border: 1px solid var(--table-border);
-            padding: 8px;
-            text-align: center;
-            transition: border-color 0.3s;
-        }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 12px; }
+        th, td { border: 1px solid var(--table-border); padding: 8px; text-align: center; transition: border-color 0.3s; }
         th { background-color: var(--table-th-bg); color: var(--title-color); transition: background-color 0.3s, color 0.3s; }
         .edit-btn { background-color: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 4px; }
         .delete-btn { background-color: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
 
-        /* شارات نوع التصريح في الجدول */
         .badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 10px; margin-top: 5px; font-weight: bold; }
         .badge-return { background-color: #3498db; color: white; }
         .badge-noreturn { background-color: #95a5a6; color: white; }
@@ -249,7 +195,6 @@
 </head>
 <body>
 
-<!-- سكريبت لمنع الشاشة البيضاء عند التحديث إذا كان الوضع الليلي مفعل -->
 <script>
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
@@ -258,12 +203,8 @@
 
 <div class="container">
     <div class="header-flex">
-        <!-- زر الرئيسية في اليمين -->
         <a href="home.html" class="back-btn">الرئيسية</a>
-        
         <h2 id="pageTitle">إدارة التصاريح الشهرية</h2>
-
-        <!-- مجموعة الأزرار في اليسار -->
         <div class="header-btns-group">
             <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
             <button class="logout-btn" onclick="logout()">خروج</button>
@@ -325,7 +266,7 @@
         </div>
     </div>
 
-    <!-- الإضافة الجديدة: نوع التصريح -->
+    <!-- نوع التصريح -->
     <div class="form-group">
         <label>نوع التصريح:</label>
         <select id="permitTypeSelect" onchange="togglePermitType()">
@@ -343,7 +284,6 @@
         <label>إدخال الاستئذان:</label>
         <div style="display: flex; gap: 10px;">
             
-            <!-- الصندوق الخاص بالساعات والدقائق (يختفي في تصريح العودة) -->
             <div id="durationInputBox" style="flex: 1;">
                 <div style="display: flex; gap: 5px;">
                     <select id="permitHoursSelect" style="flex: 1;">
@@ -376,13 +316,11 @@
                 <span class="note-text">اختر الساعات والدقائق</span>
             </div>
 
-            <!-- وقت الخروج الأساسي -->
             <div style="flex: 1;">
                 <input type="time" id="exitTimeInput">
                 <span class="note-text">وقت الخروج</span>
             </div>
 
-            <!-- الصندوق الخاص بوقت العودة (يظهر فقط في تصريح العودة) -->
             <div id="returnTimeBox" style="flex: 1; display: none;">
                 <input type="time" id="returnTimeInput">
                 <span class="note-text">وقت العودة</span>
@@ -408,7 +346,6 @@
 </div>
 
 <script>
-// إعداد وتشغيل النمط الليلي/النهاري
 function initThemeBtn() {
     const isDark = document.body.classList.contains('dark-mode');
     const btn = document.getElementById('themeToggleBtn');
@@ -456,18 +393,23 @@ function toggleCalcBox() {
     box.style.display = (box.style.display === 'block') ? 'none' : 'block';
 }
 
-// التبديل بين إدخال (بدون عودة) وإدخال (تصريح عودة)
 window.togglePermitType = function() {
     const type = document.getElementById('permitTypeSelect').value;
     const durationBox = document.getElementById('durationInputBox');
     const returnBox = document.getElementById('returnTimeBox');
     
+    // تصفير الحقول دائماً عند التبديل لتفادي تداخل الحسابات
+    document.getElementById('permitHoursSelect').value = '0';
+    document.getElementById('permitMinsSelect').value = '0';
+    document.getElementById('exitTimeInput').value = '';
+    document.getElementById('returnTimeInput').value = '';
+
     if (type === 'with_return') {
-        durationBox.style.display = 'none'; // إخفاء الساعات والدقائق
-        returnBox.style.display = 'block';  // إظهار وقت العودة
+        durationBox.style.display = 'none'; 
+        returnBox.style.display = 'block';  
     } else {
-        durationBox.style.display = 'block'; // إرجاع الساعات والدقائق
-        returnBox.style.display = 'none';    // إخفاء وقت العودة
+        durationBox.style.display = 'block'; 
+        returnBox.style.display = 'none';    
     }
 }
 
@@ -611,7 +553,6 @@ function updateUI() {
     const tbody = document.getElementById('permitsTableBody');
     tbody.innerHTML = '';
     permitsList.forEach((p, index) => {
-        // تحديد العلامة بناءً على نوع التصريح المحفوظ
         let badgeHtml = '';
         if (p.typeLabel === 'with_return') {
             badgeHtml = `<span class="badge badge-return">🔄 تصريح عودة</span>`;
@@ -636,11 +577,9 @@ window.addPermit = async function() {
     const permitType = document.getElementById('permitTypeSelect').value;
     const selectedDate = document.getElementById('permitDateInput').value;
     
-    let permitMins = 0;
-    let recordedExitTimeStr = '';
-    let permitLabel = '';
-
-    // مسار 1: تصريح عودة
+    // ==========================================
+    // الفرع الأول: تصريح عودة (المنطق الجديد)
+    // ==========================================
     if (permitType === 'with_return') {
         const exitTime = document.getElementById('exitTimeInput').value;
         const returnTime = document.getElementById('returnTimeInput').value;
@@ -656,69 +595,102 @@ window.addPermit = async function() {
         let exitTotalMins = exitH * 60 + exitM;
         let returnTotalMins = returnH * 60 + returnM;
         
-        // معالجة إذا كان وقت العودة في اليوم التالي (منتصف الليل)
         if (returnTotalMins < exitTotalMins) {
             returnTotalMins += 24 * 60;
         }
         
-        permitMins = returnTotalMins - exitTotalMins;
-        recordedExitTimeStr = `خروج: ${formatTime12h(exitTime)} | عودة: ${formatTime12h(returnTime)}`;
-        permitLabel = 'with_return';
-    } 
-    // مسار 2: تصريح بدون عودة (النظام القديم)
-    else {
-        const selHours = parseInt(document.getElementById('permitHoursSelect').value) || 0;
-        const selMins = parseInt(document.getElementById('permitMinsSelect').value) || 0;
-        const exitTime = document.getElementById('exitTimeInput').value;
+        let permitMins = returnTotalMins - exitTotalMins;
+        let recordedExitTimeStr = `خروج: ${formatTime12h(exitTime)} | عودة: ${formatTime12h(returnTime)}`;
 
-        if (selHours === 0 && selMins === 0 && exitTime) {
-            const times = getShiftTimes();
-            const [startH, startM] = times.start.split(':').map(Number);
-            const [endH, endM] = times.end.split(':').map(Number);
-            const [exitH, exitM] = exitTime.split(':').map(Number);
-            
-            let startTotalMins = startH * 60 + startM;
-            let endTotalMins = endH * 60 + endM;
-            let exitTotalMins = exitH * 60 + exitM;
-
-            if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
-            if (exitTotalMins < startTotalMins) exitTotalMins += 24 * 60;
-            
-            if (exitTotalMins > endTotalMins) {
-                alert('وقت الخروج المدخل يتجاوز وقت نهاية الشفت!');
-                return;
-            }
-            
-            permitMins = endTotalMins - exitTotalMins;
-            
-            if (permitMins <= 0) {
-                alert('وقت الخروج يساوي نهاية الشفت (لا يوجد استئذان)!');
-                return;
-            }
-            
-            recordedExitTimeStr = formatTime12h(exitTime);
-        } else {
-            permitMins = (selHours * 60) + selMins;
-            const times = getShiftTimes();
-            const [startH, startM] = times.start.split(':').map(Number);
-            const [endH, endM] = times.end.split(':').map(Number);
-            
-            let startTotalMins = startH * 60 + startM;
-            let endTotalMins = endH * 60 + endM;
-            if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
-            
-            let exitTotalMins = endTotalMins - permitMins;
-            if (exitTotalMins < 0) exitTotalMins += 24 * 60;
-            
-            let exH = Math.floor(exitTotalMins / 60) % 24;
-            let exM = exitTotalMins % 60;
-            recordedExitTimeStr = formatTime12h(`${String(exH).padStart(2,'0')}:${String(exM).padStart(2,'0')}`);
+        if (permitMins <= 0) {
+            alert('وقت العودة يجب أن يكون بعد وقت الخروج!');
+            return;
         }
-        permitLabel = 'no_return';
+
+        if (permitMins > remainingTotalMins) {
+            alert(`❌ ساعات التصريح لاتكفي!\nرصيدك المتبقي فقط ${formatMinutesToReadable(remainingTotalMins)}.`);
+            return;
+        }
+
+        remainingTotalMins -= permitMins;
+        
+        let dateStr = selectedDate;
+        if (selectedDate) {
+            const dObj = new Date(selectedDate);
+            dateStr = dObj.toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' });
+        }
+        const finalRecordStr = dateStr + ' - ' + recordedExitTimeStr;
+
+        permitsList.push({ 
+            date: finalRecordStr, 
+            totalMins: permitMins,
+            typeLabel: 'with_return' 
+        });
+        
+        document.getElementById('exitTimeInput').value = '';
+        document.getElementById('returnTimeInput').value = '';
+        
+        updateUI();
+        await saveDataToCloud();
+        return; 
+    }
+
+    // ==========================================
+    // الفرع الثاني: تصريح بدون عودة (هذا كودك الأصلي 100% بدون تعديل حسابي)
+    // ==========================================
+    const selHours = parseInt(document.getElementById('permitHoursSelect').value) || 0;
+    const selMins = parseInt(document.getElementById('permitMinsSelect').value) || 0;
+    const exitTime = document.getElementById('exitTimeInput').value;
+    
+    let permitMins = 0;
+    let recordedExitTimeStr = '';
+
+    if (selHours === 0 && selMins === 0 && exitTime) {
+        const times = getShiftTimes();
+        const [startH, startM] = times.start.split(':').map(Number);
+        const [endH, endM] = times.end.split(':').map(Number);
+        const [exitH, exitM] = exitTime.split(':').map(Number);
+        
+        let startTotalMins = startH * 60 + startM;
+        let endTotalMins = endH * 60 + endM;
+        let exitTotalMins = exitH * 60 + exitM;
+
+        if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
+        if (exitTotalMins < startTotalMins) exitTotalMins += 24 * 60;
+        
+        if (exitTotalMins > endTotalMins) {
+            alert('وقت الخروج المدخل يتجاوز وقت نهاية الشفت!');
+            return;
+        }
+        
+        permitMins = endTotalMins - exitTotalMins;
+        
+        if (permitMins <= 0) {
+            alert('وقت الخروج يساوي نهاية الشفت (لا يوجد استئذان)!');
+            return;
+        }
+        
+        recordedExitTimeStr = formatTime12h(exitTime);
+    } else {
+        permitMins = (selHours * 60) + selMins;
+        const times = getShiftTimes();
+        const [startH, startM] = times.start.split(':').map(Number);
+        const [endH, endM] = times.end.split(':').map(Number);
+        
+        let startTotalMins = startH * 60 + startM;
+        let endTotalMins = endH * 60 + endM;
+        if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
+        
+        let exitTotalMins = endTotalMins - permitMins;
+        if (exitTotalMins < 0) exitTotalMins += 24 * 60;
+        
+        let exH = Math.floor(exitTotalMins / 60) % 24;
+        let exM = exitTotalMins % 60;
+        recordedExitTimeStr = formatTime12h(`${String(exH).padStart(2,'0')}:${String(exM).padStart(2,'0')}`);
     }
 
     if (permitMins <= 0) {
-        alert('الرجاء إدخال بيانات التصريح بشكل صحيح');
+        alert('الرجاء اختيار عدد الساعات والدقائق أو تحديد وقت خروج دقيق');
         return;
     }
 
@@ -739,14 +711,12 @@ window.addPermit = async function() {
     permitsList.push({ 
         date: finalRecordStr, 
         totalMins: permitMins,
-        typeLabel: permitLabel // حفظ نوع التصريح للسحابة
+        typeLabel: 'no_return'
     });
     
-    // تصفير الحقول بعد الإضافة
     document.getElementById('permitHoursSelect').value = '0';
     document.getElementById('permitMinsSelect').value = '0';
     document.getElementById('exitTimeInput').value = '';
-    document.getElementById('returnTimeInput').value = '';
     
     updateUI();
     await saveDataToCloud();

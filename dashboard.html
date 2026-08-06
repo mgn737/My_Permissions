@@ -281,7 +281,7 @@
     </div>
 
     <div class="form-group">
-        <label>إدخال الاستئذان:</label>
+        <label>إدخال الاستئذان <span style="color: red;">"اختر احد الطريقتين"</span>:</label>
         <div style="display: flex; gap: 12px;">
             
             <div id="durationInputBox" style="flex: 1;">
@@ -585,14 +585,13 @@ window.addPermit = async function() {
             return;
         }
 
-        // جلب أوقات الشفت الحالي للتحقق
         const shiftTimes = getShiftTimes();
         const [shiftStartH, shiftStartM] = shiftTimes.start.split(':').map(Number);
         const [shiftEndH, shiftEndM] = shiftTimes.end.split(':').map(Number);
         
         let shiftStartTotalMins = shiftStartH * 60 + shiftStartM;
         let shiftEndTotalMins = shiftEndH * 60 + shiftEndM;
-        if (shiftEndTotalMins < shiftStartTotalMins) shiftEndTotalMins += 24 * 60; // للشفتات الليلية
+        if (shiftEndTotalMins < shiftStartTotalMins) shiftEndTotalMins += 24 * 60;
 
         const [exitH, exitM] = exitTime.split(':').map(Number);
         const [returnH, returnM] = returnTime.split(':').map(Number);
@@ -604,7 +603,6 @@ window.addPermit = async function() {
             returnTotalMins += 24 * 60;
         }
 
-        // تعديل الدقائق للمقارنة في الشفتات الليلية إذا لزم الأمر
         let checkExitMins = exitTotalMins;
         let checkReturnMins = returnTotalMins;
         if (checkExitMins < shiftStartTotalMins && shiftEndTotalMins > 24 * 60) {
@@ -614,7 +612,6 @@ window.addPermit = async function() {
             checkReturnMins += 24 * 60;
         }
 
-        // التحقق من أن وقت الخروج والعودة يقعان ضمن أوقات الشفت
         if (checkExitMins < shiftStartTotalMins || checkExitMins > shiftEndTotalMins ||
             checkReturnMins < shiftStartTotalMins || checkReturnMins > shiftEndTotalMins) {
             alert('❌ تنبيه: وقت الخروج أو العودة خارج أوقات الشفت المحدد!');

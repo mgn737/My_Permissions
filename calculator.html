@@ -48,7 +48,7 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* زر الوضع الليلي/النهاري الموحد */
+        /* زر الوضع الليلي/النهاري في أعلى اليسار */
         .theme-icon-btn {
             position: absolute;
             top: 20px;
@@ -67,6 +67,28 @@
         }
         .dark-mode .theme-icon-btn:hover {
             background-color: rgba(255,255,255,0.1);
+        }
+
+        /* زر الرئيسية في أعلى اليمين */
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--container-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background 0.3s, color 0.3s, transform 0.2s;
+        }
+        .home-btn:hover {
+            transform: scale(1.05);
+            background-color: var(--input-bg);
         }
 
         .container {
@@ -141,7 +163,6 @@
             margin-bottom: 0;
         }
         
-        /* كلاس خاص بزر الحساب حتى لا يتأثر زر الليلي */
         .calc-btn {
             width: 100%;
             padding: 12px;
@@ -190,7 +211,10 @@
     }
 </script>
 
-<!-- زر التبديل بين الليل والنهار الموحد -->
+<!-- زر الرئيسية في أعلى اليمين -->
+<a href="home.html" class="home-btn">الرئيسية</a>
+
+<!-- زر التبديل بين الليل والنهار في أعلى اليسار -->
 <button id="themeToggleBtn" class="theme-icon-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
 
 <div class="container">
@@ -235,7 +259,7 @@
 </div>
 
 <script>
-// --- أكواد النمط الليلي المطابقة لباقي الصفحات ---
+// --- أكواد النمط الليلي ---
 function initThemeBtn() {
     const isDark = document.body.classList.contains('dark-mode');
     const btn = document.getElementById('themeToggleBtn');
@@ -251,16 +275,14 @@ window.toggleTheme = function() {
     initThemeBtn();
 }
 
-// تشغيل الدالة عند فتح الصفحة لضبط الزر
 initThemeBtn();
-// ----------------------------------------
 
 function format12Hour(totalMins) {
     let hours24 = Math.floor((totalMins / 60) % 24);
     let mins = totalMins % 60;
     let period = hours24 >= 12 ? 'م' : 'ص';
     let hours12 = hours24 % 12;
-    hours12 = hours12 ? hours12 : 12; // الساعة 12 بدلاً من 0
+    hours12 = hours12 ? hours12 : 12;
     return `${hours12}:${String(mins).padStart(2, '0')} ${period}`;
 }
 
@@ -286,7 +308,6 @@ function calculateExitTime() {
     let endTotalMins = endH * 60 + endM;
     const permitTotalMins = pHours * 60 + pMinutes;
 
-    // معالجة الشفتات الليلية (تتجاوز منتصف الليل)
     if (endTotalMins <= startTotalMins) {
         endTotalMins += 24 * 60;
     }
@@ -294,7 +315,6 @@ function calculateExitTime() {
     const singleShiftMins = endTotalMins - startTotalMins;
 
     if (type === '1') {
-        // نظام يوم واحد
         if (permitTotalMins > singleShiftMins) {
             resultText.innerHTML = `<span class="highlight" style="color:#e74c3c;">عذراً، رصيد التصريح المدخل أكبر من إجمالي ساعات الشفت الواحد!</span>`;
         } else {
@@ -311,16 +331,13 @@ function calculateExitTime() {
             `;
         }
     } else {
-        // نظام يومين (تغطية اليوم الثاني بالكامل)
         const day2CoverMins = singleShiftMins;
 
         if (permitTotalMins < day2CoverMins) {
-            // إذا كان التصريح أقل من شفت اليوم الثاني، فلا يمكن تغطيته
             const requiredHours = Math.floor(day2CoverMins / 60);
             const requiredMins = day2CoverMins % 60;
             resultText.innerHTML = `<span class="highlight" style="color:#e74c3c;">عذراً، رصيد التصريح المدخل لا يكفي لتغطية اليوم الثاني بالكامل. تحتاج على الأقل لـ ${requiredHours} ساعة و ${requiredMins} دقيقة.</span>`;
         } else {
-            // إذا كان التصريح أكبر من أو يساوي شفت اليوم الثاني
             const remainingPermitMins = permitTotalMins - day2CoverMins;
             
             if (remainingPermitMins >= singleShiftMins) {

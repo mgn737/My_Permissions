@@ -240,6 +240,11 @@
         th { background-color: var(--table-th-bg); color: var(--title-color); transition: background-color 0.3s, color 0.3s; }
         .edit-btn { background-color: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 4px; }
         .delete-btn { background-color: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+
+        /* شارات نوع التصريح في الجدول */
+        .badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 10px; margin-top: 5px; font-weight: bold; }
+        .badge-return { background-color: #3498db; color: white; }
+        .badge-noreturn { background-color: #95a5a6; color: white; }
     </style>
 </head>
 <body>
@@ -258,7 +263,7 @@
         
         <h2 id="pageTitle">إدارة التصاريح الشهرية</h2>
 
-        <!-- مجموعة الأزرار في اليسار (أيقونة الوضع الليلي/النهاري بدون كلام بجانب زر الخروج مباشرة) -->
+        <!-- مجموعة الأزرار في اليسار -->
         <div class="header-btns-group">
             <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
             <button class="logout-btn" onclick="logout()">خروج</button>
@@ -320,15 +325,26 @@
         </div>
     </div>
 
+    <!-- الإضافة الجديدة: نوع التصريح -->
+    <div class="form-group">
+        <label>نوع التصريح:</label>
+        <select id="permitTypeSelect" onchange="togglePermitType()">
+            <option value="no_return">تصريح بدون عودة (الافتراضي)</option>
+            <option value="with_return">تصريح عودة</option>
+        </select>
+    </div>
+
     <div class="form-group">
         <label>تاريخ الاستئذان:</label>
         <input type="date" id="permitDateInput">
     </div>
 
     <div class="form-group">
-        <label>إدخال الاستئذان (اختر إحدى الطريقتين):</label>
+        <label>إدخال الاستئذان:</label>
         <div style="display: flex; gap: 10px;">
-            <div style="flex: 1;">
+            
+            <!-- الصندوق الخاص بالساعات والدقائق (يختفي في تصريح العودة) -->
+            <div id="durationInputBox" style="flex: 1;">
                 <div style="display: flex; gap: 5px;">
                     <select id="permitHoursSelect" style="flex: 1;">
                         <option value="0">0 ساعة</option>
@@ -359,10 +375,19 @@
                 </div>
                 <span class="note-text">اختر الساعات والدقائق</span>
             </div>
+
+            <!-- وقت الخروج الأساسي -->
             <div style="flex: 1;">
                 <input type="time" id="exitTimeInput">
                 <span class="note-text">وقت الخروج</span>
             </div>
+
+            <!-- الصندوق الخاص بوقت العودة (يظهر فقط في تصريح العودة) -->
+            <div id="returnTimeBox" style="flex: 1; display: none;">
+                <input type="time" id="returnTimeInput">
+                <span class="note-text">وقت العودة</span>
+            </div>
+            
         </div>
     </div>
 
@@ -383,7 +408,7 @@
 </div>
 
 <script>
-// إعداد وتشغيل النمط الليلي/النهاري (أيقونة فقط بدون كلام)
+// إعداد وتشغيل النمط الليلي/النهاري
 function initThemeBtn() {
     const isDark = document.body.classList.contains('dark-mode');
     const btn = document.getElementById('themeToggleBtn');
@@ -429,6 +454,21 @@ function toggleCalcCustomShift() {
 function toggleCalcBox() {
     const box = document.getElementById('calcSection');
     box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+}
+
+// التبديل بين إدخال (بدون عودة) وإدخال (تصريح عودة)
+window.togglePermitType = function() {
+    const type = document.getElementById('permitTypeSelect').value;
+    const durationBox = document.getElementById('durationInputBox');
+    const returnBox = document.getElementById('returnTimeBox');
+    
+    if (type === 'with_return') {
+        durationBox.style.display = 'none'; // إخفاء الساعات والدقائق
+        returnBox.style.display = 'block';  // إظهار وقت العودة
+    } else {
+        durationBox.style.display = 'block'; // إرجاع الساعات والدقائق
+        returnBox.style.display = 'none';    // إخفاء وقت العودة
+    }
 }
 
 let remainingTotalMins = 1320;
@@ -571,9 +611,17 @@ function updateUI() {
     const tbody = document.getElementById('permitsTableBody');
     tbody.innerHTML = '';
     permitsList.forEach((p, index) => {
+        // تحديد العلامة بناءً على نوع التصريح المحفوظ
+        let badgeHtml = '';
+        if (p.typeLabel === 'with_return') {
+            badgeHtml = `<span class="badge badge-return">🔄 تصريح عودة</span>`;
+        } else {
+            badgeHtml = `<span class="badge badge-noreturn">🚪 بدون عودة</span>`;
+        }
+
         tbody.innerHTML += `
             <tr>
-                <td>${p.date}</td>
+                <td style="text-align: right;">${p.date}<br>${badgeHtml}</td>
                 <td>${formatMinutesToReadable(p.totalMins)}</td>
                 <td>
                     <button class="edit-btn" onclick="editPermit(${index})">✏️</button>
@@ -585,60 +633,92 @@ function updateUI() {
 }
 
 window.addPermit = async function() {
-    const selHours = parseInt(document.getElementById('permitHoursSelect').value) || 0;
-    const selMins = parseInt(document.getElementById('permitMinsSelect').value) || 0;
-    const exitTime = document.getElementById('exitTimeInput').value;
+    const permitType = document.getElementById('permitTypeSelect').value;
     const selectedDate = document.getElementById('permitDateInput').value;
     
     let permitMins = 0;
     let recordedExitTimeStr = '';
+    let permitLabel = '';
 
-    if (selHours === 0 && selMins === 0 && exitTime) {
-        const times = getShiftTimes();
-        const [startH, startM] = times.start.split(':').map(Number);
-        const [endH, endM] = times.end.split(':').map(Number);
+    // مسار 1: تصريح عودة
+    if (permitType === 'with_return') {
+        const exitTime = document.getElementById('exitTimeInput').value;
+        const returnTime = document.getElementById('returnTimeInput').value;
+        
+        if (!exitTime || !returnTime) {
+            alert('الرجاء إدخال وقت الخروج ووقت العودة!');
+            return;
+        }
+
         const [exitH, exitM] = exitTime.split(':').map(Number);
+        const [returnH, returnM] = returnTime.split(':').map(Number);
         
-        let startTotalMins = startH * 60 + startM;
-        let endTotalMins = endH * 60 + endM;
         let exitTotalMins = exitH * 60 + exitM;
+        let returnTotalMins = returnH * 60 + returnM;
+        
+        // معالجة إذا كان وقت العودة في اليوم التالي (منتصف الليل)
+        if (returnTotalMins < exitTotalMins) {
+            returnTotalMins += 24 * 60;
+        }
+        
+        permitMins = returnTotalMins - exitTotalMins;
+        recordedExitTimeStr = `خروج: ${formatTime12h(exitTime)} | عودة: ${formatTime12h(returnTime)}`;
+        permitLabel = 'with_return';
+    } 
+    // مسار 2: تصريح بدون عودة (النظام القديم)
+    else {
+        const selHours = parseInt(document.getElementById('permitHoursSelect').value) || 0;
+        const selMins = parseInt(document.getElementById('permitMinsSelect').value) || 0;
+        const exitTime = document.getElementById('exitTimeInput').value;
 
-        if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
-        if (exitTotalMins < startTotalMins) exitTotalMins += 24 * 60;
-        
-        if (exitTotalMins > endTotalMins) {
-            alert('وقت الخروج المدخل يتجاوز وقت نهاية الشفت!');
-            return;
+        if (selHours === 0 && selMins === 0 && exitTime) {
+            const times = getShiftTimes();
+            const [startH, startM] = times.start.split(':').map(Number);
+            const [endH, endM] = times.end.split(':').map(Number);
+            const [exitH, exitM] = exitTime.split(':').map(Number);
+            
+            let startTotalMins = startH * 60 + startM;
+            let endTotalMins = endH * 60 + endM;
+            let exitTotalMins = exitH * 60 + exitM;
+
+            if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
+            if (exitTotalMins < startTotalMins) exitTotalMins += 24 * 60;
+            
+            if (exitTotalMins > endTotalMins) {
+                alert('وقت الخروج المدخل يتجاوز وقت نهاية الشفت!');
+                return;
+            }
+            
+            permitMins = endTotalMins - exitTotalMins;
+            
+            if (permitMins <= 0) {
+                alert('وقت الخروج يساوي نهاية الشفت (لا يوجد استئذان)!');
+                return;
+            }
+            
+            recordedExitTimeStr = formatTime12h(exitTime);
+        } else {
+            permitMins = (selHours * 60) + selMins;
+            const times = getShiftTimes();
+            const [startH, startM] = times.start.split(':').map(Number);
+            const [endH, endM] = times.end.split(':').map(Number);
+            
+            let startTotalMins = startH * 60 + startM;
+            let endTotalMins = endH * 60 + endM;
+            if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
+            
+            let exitTotalMins = endTotalMins - permitMins;
+            if (exitTotalMins < 0) exitTotalMins += 24 * 60;
+            
+            let exH = Math.floor(exitTotalMins / 60) % 24;
+            let exM = exitTotalMins % 60;
+            recordedExitTimeStr = formatTime12h(`${String(exH).padStart(2,'0')}:${String(exM).padStart(2,'0')}`);
         }
-        
-        permitMins = endTotalMins - exitTotalMins;
-        
-        if (permitMins <= 0) {
-            alert('وقت الخروج يساوي نهاية الشفت (لا يوجد استئذان)!');
-            return;
-        }
-        
-        recordedExitTimeStr = formatTime12h(exitTime);
-    } else {
-        permitMins = (selHours * 60) + selMins;
-        const times = getShiftTimes();
-        const [startH, startM] = times.start.split(':').map(Number);
-        const [endH, endM] = times.end.split(':').map(Number);
-        
-        let startTotalMins = startH * 60 + startM;
-        let endTotalMins = endH * 60 + endM;
-        if (endTotalMins < startTotalMins) endTotalMins += 24 * 60;
-        
-        let exitTotalMins = endTotalMins - permitMins;
-        if (exitTotalMins < 0) exitTotalMins += 24 * 60;
-        
-        let exH = Math.floor(exitTotalMins / 60) % 24;
-        let exM = exitTotalMins % 60;
-        recordedExitTimeStr = formatTime12h(`${String(exH).padStart(2,'0')}:${String(exM).padStart(2,'0')}`);
+        permitLabel = 'no_return';
     }
 
     if (permitMins <= 0) {
-        alert('الرجاء اختيار عدد الساعات والدقائق أو تحديد وقت خروج دقيق');
+        alert('الرجاء إدخال بيانات التصريح بشكل صحيح');
         return;
     }
 
@@ -656,11 +736,17 @@ window.addPermit = async function() {
     }
     const finalRecordStr = dateStr + ' - ' + recordedExitTimeStr;
 
-    permitsList.push({ date: finalRecordStr, totalMins: permitMins });
+    permitsList.push({ 
+        date: finalRecordStr, 
+        totalMins: permitMins,
+        typeLabel: permitLabel // حفظ نوع التصريح للسحابة
+    });
     
+    // تصفير الحقول بعد الإضافة
     document.getElementById('permitHoursSelect').value = '0';
     document.getElementById('permitMinsSelect').value = '0';
     document.getElementById('exitTimeInput').value = '';
+    document.getElementById('returnTimeInput').value = '';
     
     updateUI();
     await saveDataToCloud();

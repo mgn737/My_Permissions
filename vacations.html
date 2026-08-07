@@ -148,7 +148,6 @@
     <div class="header">
         <a href="home.html" class="header-btn home-btn">الرئيسية 🏠</a>
         
-        <!-- زر تغيير النمط كأيقونة -->
         <button class="theme-toggle-icon" onclick="toggleTheme()" title="تبديل المظهر">
             <!-- أيقونة القمر (للوضع النهاري) -->
             <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -194,12 +193,21 @@
     <button class="btn-main" onclick="toggleLeaveForm()">➕ طلب إجازة</button>
 
     <div class="form-section" id="leaveForm">
+        <!-- الإضافة الجديدة: حقل اختيار نوع الإجازة -->
+        <div class="form-group">
+            <label>نوع الإجازة:</label>
+            <select id="leaveTypeInput">
+                <option value="normal">إجازة اعتيادية</option>
+                <option value="hospital">موعد مستشفى</option>
+            </select>
+        </div>
+
         <div class="form-group">
             <label>تاريخ بداية الإجازة:</label>
             <input type="date" id="leaveDateInput" onchange="updateDualDateDisplay()">
-            
             <div id="dualDateDisplay" class="date-display-box">اختر التاريخ من التقويم أعلاه</div>
         </div>
+        
         <div class="form-group">
             <label>عدد أيام الإجازة (1 - 100):</label>
             <select id="leaveDays"></select>
@@ -215,7 +223,7 @@
         <thead>
             <tr>
                 <th>التاريخ</th>
-                <th>اليوم</th>
+                <th>اليوم (النوع)</th>
                 <th>الأيام</th>
                 <th>المباشرة</th>
                 <th>إجراءات</th>
@@ -240,7 +248,6 @@
     let isDataLoaded = false;
     let selectedDateObj = null;
 
-    // إعداد زر النمط عند تحميل الصفحة
     function initThemeBtn() {
         const isDark = document.body.classList.contains('dark-mode');
         const moon = document.getElementById('moon-icon');
@@ -252,7 +259,6 @@
         }
     }
     
-    // دالة التبديل بين الأنماط
     window.toggleTheme = function() {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
@@ -260,10 +266,8 @@
         initThemeBtn();
     }
     
-    // تشغيل دالة زر النمط
     initThemeBtn();
 
-    // تعبئة قائمة الأيام للاجازة
     const daysSelect = document.getElementById('leaveDays');
     for (let i = 1; i <= 100; i++) {
         let opt = document.createElement('option');
@@ -272,7 +276,6 @@
         daysSelect.appendChild(opt);
     }
 
-    // تعبئة تاريخ اليوم كافتراضي في الحقل
     function setInitialDate() {
         const today = new Date();
         const year = today.getFullYear();
@@ -282,7 +285,6 @@
         updateDualDateDisplay();
     }
 
-    // تحديث وتنسيق عرض التاريخ الهجري فقط
     function updateDualDateDisplay() {
         const inputVal = document.getElementById('leaveDateInput').value;
         if (!inputVal) return;
@@ -353,7 +355,6 @@
         return hijri;
     }
 
-    // الدالة الذكية المحدثة
     async function checkRenewals() {
         const hDate = getTodayHijri();
         let changed = false;
@@ -365,10 +366,8 @@
             changed = true;
         }
 
-        // --- التعديل الذكي لتهيئة المستخدم الجديد ---
         if (lastMainRenewYear === 0) { 
             if (hDate.month < renewSettings.month || (hDate.month === renewSettings.month && hDate.day < renewSettings.day)) {
-                // إذا كان التاريخ المطلوب لسه ما جاء هذي السنة، نرجع العداد سنة عشان يجدد لما يجي
                 lastMainRenewYear = hDate.year - 1; 
             } else {
                 lastMainRenewYear = hDate.year; 
@@ -377,13 +376,10 @@
         }
 
         if (hDate.year > lastMainRenewYear) {
-            // إذا وصل أو تجاوز تاريخ التجديد في السنة الجديدة
             if (hDate.month > renewSettings.month || (hDate.month === renewSettings.month && hDate.day >= renewSettings.day)) {
                 mainBalance += 36;
                 lastMainRenewYear = hDate.year;
-                
                 leavesHistory = []; 
-                
                 changed = true;
             }
         }
@@ -399,10 +395,13 @@
         const tbody = document.getElementById('leaveTableBody');
         tbody.innerHTML = '';
         leavesHistory.forEach((leave, index) => {
+            // إضافة تسمية صغيرة أسفل اليوم لتوضيح نوع الإجازة في السجل
+            const typeLabel = leave.leaveType === 'hospital' ? 'مستشفى' : 'اعتيادية';
+            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${leave.startDate}</td>
-                <td>${leave.dayName}</td>
+                <td>${leave.dayName} <br><small style="color: #7f8c8d; font-size: 10px;">(${typeLabel})</small></td>
                 <td>${leave.daysCount}</td>
                 <td>${leave.returnDate}</td>
                 <td>
@@ -413,17 +412,27 @@
         });
     }
 
+    // التعديل الرئيسي في دالة رفع الإجازة
     window.submitLeave = async function() {
+        const leaveType = document.getElementById('leaveTypeInput').value;
         const daysCount = parseInt(document.getElementById('leaveDays').value);
         
         if (!selectedDateObj || daysCount < 1) return alert("الرجاء تحديد تاريخ صحيح.");
 
-        if (daysCount >= 1 && daysCount <= 4) {
-            if (daysCount > scatBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأيام المتفرقة (${scatBalance} يوم متاح).`);
-            if (daysCount > mainBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأساسي (${mainBalance} يوم متاح).`);
-            scatBalance -= daysCount;
-            mainBalance -= daysCount;
-        } else if (daysCount >= 5) {
+        // التحقق من نوع الإجازة وتطبيق الخصم
+        if (leaveType === 'normal') {
+            // النظام القديم للإجازة الاعتيادية
+            if (daysCount >= 1 && daysCount <= 4) {
+                if (daysCount > scatBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأيام المتفرقة (${scatBalance} يوم متاح).`);
+                if (daysCount > mainBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأساسي (${mainBalance} يوم متاح).`);
+                scatBalance -= daysCount;
+                mainBalance -= daysCount;
+            } else if (daysCount >= 5) {
+                if (daysCount > mainBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأساسي (${mainBalance} يوم متاح).`);
+                mainBalance -= daysCount;
+            }
+        } else if (leaveType === 'hospital') {
+            // النظام الجديد لموعد المستشفى (خصم من الأساسي فقط دائماً)
             if (daysCount > mainBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأساسي (${mainBalance} يوم متاح).`);
             mainBalance -= daysCount;
         }
@@ -442,24 +451,34 @@
             startDate: dateCombinedStr,
             dayName: dayName,
             daysCount: daysCount,
-            returnDate: returnDateStr
+            returnDate: returnDateStr,
+            leaveType: leaveType // حفظ النوع في السجل
         });
 
         toggleLeaveForm();
         updateUI();
         await saveDataToCloud();
-        alert("تم رفع الإجازة!");
+        alert("تم رفع الإجازة بنجاح!");
     }
 
+    // التعديل في دالة حذف الإجازة للتعامل مع النوعين
     window.deleteLeave = async function(index) {
         if(confirm("هل أنت متأكد من حذف هذه الإجازة واسترجاع الرصيد؟")) {
             const leave = leavesHistory[index];
-            if (leave.daysCount >= 1 && leave.daysCount <= 4) {
-                scatBalance += leave.daysCount;
+            
+            if (leave.leaveType === 'hospital') {
+                // إذا كان موعد مستشفى نرجع للأساسي فقط
                 mainBalance += leave.daysCount;
             } else {
-                mainBalance += leave.daysCount;
+                // النظام القديم للاعتيادية
+                if (leave.daysCount >= 1 && leave.daysCount <= 4) {
+                    scatBalance += leave.daysCount;
+                    mainBalance += leave.daysCount;
+                } else {
+                    mainBalance += leave.daysCount;
+                }
             }
+            
             leavesHistory.splice(index, 1);
             updateUI();
             await saveDataToCloud();
@@ -478,7 +497,6 @@
         document.getElementById('renewMonth').value = renewSettings.month;
     }
 
-    // دالة الحفظ الذكية المحدثة
     window.saveRenewalDate = async function() {
         const d = document.getElementById('renewDay').value;
         const m = document.getElementById('renewMonth').value;
@@ -486,12 +504,9 @@
         if(d && m) {
             renewSettings = { day: parseInt(d), month: parseInt(m) };
             
-            // --- التعديل الذكي عند حفظ إعدادات جديدة ---
             const hDate = getTodayHijri();
             
-            // نتحقق: إذا التاريخ اللي حطيته هو تاريخ اليوم أو تاريخ لسه بيجي في الأيام الجاية
             if (hDate.month < renewSettings.month || (hDate.month === renewSettings.month && hDate.day <= renewSettings.day)) {
-                // نضبط النظام عشان يسمح بالتجديد في نفس هذي السنة
                 if (lastMainRenewYear === hDate.year) {
                     lastMainRenewYear = hDate.year - 1;
                 }
@@ -501,7 +516,6 @@
             alert("تم حفظ تاريخ التجديد!");
             toggleSettings();
             
-            // الفحص مباشرة عشان لو كان التاريخ هو اليوم يجدد فوراً
             checkRenewals(); 
         }
     }

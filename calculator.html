@@ -22,17 +22,17 @@
 
         /* ألوان الوضع الليلي (أزرق ليلي) */
         body.dark-mode {
-            --bg-color: #0b1325; /* أزرق ليلي غامق جداً للخلفية */
-            --container-bg: #152238; /* أزرق ليلي للحاوية */
+            --bg-color: #0b1325;
+            --container-bg: #152238;
             --text-color: #e2e8f0;
             --title-color: #f8fafc;
-            --input-bg: #1e2f4d; /* أزرق فاتح قليلاً للخانات */
+            --input-bg: #1e2f4d;
             --input-border: #2a4365;
             --btn-bg: #3b82f6;
             --btn-hover: #2563eb;
             --result-bg: #1e2f4d;
             --result-border: #3b82f6;
-            --highlight-color: #fbd38d; /* لون برتقالي/ذهبي متناسق مع الأزرق */
+            --highlight-color: #fbd38d;
         }
 
         body {
@@ -48,7 +48,6 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* زر الوضع الليلي/النهاري في أعلى اليسار */
         .theme-icon-btn {
             position: absolute;
             top: 20px;
@@ -69,7 +68,6 @@
             background-color: rgba(255,255,255,0.1);
         }
 
-        /* زر الرئيسية في أعلى اليمين */
         .home-btn {
             position: absolute;
             top: 20px;
@@ -125,9 +123,10 @@
             font-size: 13px;
             text-align: right;
         }
-        /* توحيد عرض حقول الإدخال والوقت والقوائم لتكون بملء العرض 100% */
+
+        /* توحيد عرض حقول الوقت، القائمة، والأرقام لتكون بعرض 50% مثل الحقل الأول */
         input[type="time"], select, input[type="number"] {
-            width: 100%;
+            width: 50%;
             padding: 8px;
             font-size: 14px;
             border: 1px solid var(--input-border);
@@ -137,8 +136,12 @@
             background-color: var(--input-bg);
             color: var(--text-color);
             text-align: right;
+            display: block;
+            margin-right: 0;
+            margin-left: auto;
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
+
         .permit-group {
             display: flex;
             gap: 10px;
@@ -146,6 +149,10 @@
         .permit-group .form-group {
             flex: 1;
             margin-bottom: 0;
+        }
+        /* إلغاء الوراثة لحقول الأرقام داخل مجموعة التصريح لتأخذ العرض الكامل 100% داخل نصف المساحة المخصصة لها */
+        .permit-group input[type="number"] {
+            width: 100%;
         }
         
         .calc-btn {
@@ -189,17 +196,13 @@
 </head>
 <body>
 
-<!-- سكريبت لمنع الشاشة البيضاء عند التحديث إذا كان الوضع الليلي مفعل -->
 <script>
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
     }
 </script>
 
-<!-- زر الرئيسية في أعلى اليمين (يوجه إلى صفحة index) -->
 <a href="index.html" class="home-btn">الرئيسية</a>
-
-<!-- زر التبديل بين الليل والنهار في أعلى اليسار -->
 <button id="themeToggleBtn" class="theme-icon-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
 
 <div class="container">
@@ -244,7 +247,6 @@
 </div>
 
 <script>
-// --- أكواد النمط الليلي ---
 function initThemeBtn() {
     const isDark = document.body.classList.contains('dark-mode');
     const btn = document.getElementById('themeToggleBtn');

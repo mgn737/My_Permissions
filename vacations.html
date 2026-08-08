@@ -33,6 +33,12 @@
     </script>
 
     <style>
+        /* إضافة قاعدة عامة تجبر كل العناصر على الالتزام بحدودها */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+        }
+
         /* المتغيرات الأساسية (الوضع النهاري) */
         :root {
             --bg-color: #f4f7f6;
@@ -61,7 +67,15 @@
             --icon-color: #f8fafc;
         }
 
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: background-color 0.3s, color 0.3s; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            margin: 0; 
+            padding: 20px; 
+            transition: background-color 0.3s, color 0.3s; 
+            overflow-x: hidden; /* يمنع الشاشة من التحرك لليمين واليسار */
+        }
         
         .header { display: flex; justify-content: space-between; background-color: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; align-items: center; transition: background-color 0.3s; }
         .header-btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; font-size: 14px; }
@@ -95,25 +109,31 @@
         
         .form-section, .settings-section { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; margin-bottom: 20px; border: 2px solid #3498db; transition: background-color 0.3s; }
         .settings-section h4 { color: var(--title-color); transition: color 0.3s; }
-        .form-group { margin-bottom: 15px; text-align: right; }
+        .form-group { margin-bottom: 15px; text-align: right; width: 100%; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
         
-        /* التعديل تم هنا لحل مشكلة خروج المربعات */
+        /* التعديل الجذري الجديد هنا */
         .form-group select, .form-group input { 
             width: 100%; 
             max-width: 100%;
             padding: 10px; 
-            margin: 0; /* يمنع إضافة هوامش عشوائية */
-            display: block; /* يجعله يلتزم بحدود الأب */
+            margin: 0; 
+            display: block; 
             border: 1px solid var(--input-border); 
             border-radius: 6px; 
-            box-sizing: border-box; 
-            -webkit-box-sizing: border-box; /* ضروري لمتصفح سفاري */
             background-color: var(--input-bg); 
             color: var(--text-color);
             font-family: inherit;
             font-size: 14px;
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            -webkit-appearance: none; /* يمسح التنسيق الافتراضي المزعج لسفاري */
+            appearance: none;
+        }
+
+        /* استثناء لإرجاع أيقونة التقويم في بعض المتصفحات بعد إلغاء التنسيق الافتراضي */
+        .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+            display: block;
+            opacity: 1;
         }
 
         .date-display-box {
@@ -197,7 +217,7 @@
     <button class="btn-main" onclick="toggleLeaveForm()">➕ طلب إجازة</button>
 
     <div class="form-section" id="leaveForm">
-        <!-- الإضافة الجديدة: حقل اختيار نوع الإجازة -->
+        <!-- حقل اختيار نوع الإجازة -->
         <div class="form-group">
             <label>نوع الإجازة:</label>
             <select id="leaveTypeInput">
@@ -399,7 +419,6 @@
         const tbody = document.getElementById('leaveTableBody');
         tbody.innerHTML = '';
         leavesHistory.forEach((leave, index) => {
-            // إضافة تسمية صغيرة أسفل اليوم لتوضيح نوع الإجازة في السجل
             const typeLabel = leave.leaveType === 'hospital' ? 'مستشفى' : 'اعتيادية';
             
             const tr = document.createElement('tr');
@@ -416,16 +435,13 @@
         });
     }
 
-    // التعديل الرئيسي في دالة رفع الإجازة
     window.submitLeave = async function() {
         const leaveType = document.getElementById('leaveTypeInput').value;
         const daysCount = parseInt(document.getElementById('leaveDays').value);
         
         if (!selectedDateObj || daysCount < 1) return alert("الرجاء تحديد تاريخ صحيح.");
 
-        // التحقق من نوع الإجازة وتطبيق الخصم
         if (leaveType === 'normal') {
-            // النظام القديم للإجازة الاعتيادية
             if (daysCount >= 1 && daysCount <= 4) {
                 if (daysCount > scatBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأيام المتفرقة (${scatBalance} يوم متاح).`);
                 if (daysCount > mainBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأساسي (${mainBalance} يوم متاح).`);
@@ -436,7 +452,6 @@
                 mainBalance -= daysCount;
             }
         } else if (leaveType === 'hospital') {
-            // النظام الجديد لموعد المستشفى (خصم من الأساسي فقط دائماً)
             if (daysCount > mainBalance) return alert(`مرفوض: لا يوجد رصيد كافي في الأساسي (${mainBalance} يوم متاح).`);
             mainBalance -= daysCount;
         }
@@ -456,7 +471,7 @@
             dayName: dayName,
             daysCount: daysCount,
             returnDate: returnDateStr,
-            leaveType: leaveType // حفظ النوع في السجل
+            leaveType: leaveType
         });
 
         toggleLeaveForm();
@@ -465,16 +480,13 @@
         alert("تم رفع الإجازة بنجاح!");
     }
 
-    // التعديل في دالة حذف الإجازة للتعامل مع النوعين
     window.deleteLeave = async function(index) {
         if(confirm("هل أنت متأكد من حذف هذه الإجازة واسترجاع الرصيد؟")) {
             const leave = leavesHistory[index];
             
             if (leave.leaveType === 'hospital') {
-                // إذا كان موعد مستشفى نرجع للأساسي فقط
                 mainBalance += leave.daysCount;
             } else {
-                // النظام القديم للاعتيادية
                 if (leave.daysCount >= 1 && leave.daysCount <= 4) {
                     scatBalance += leave.daysCount;
                     mainBalance += leave.daysCount;

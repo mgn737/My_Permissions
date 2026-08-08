@@ -98,13 +98,17 @@
         .form-group { margin-bottom: 15px; text-align: right; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
         
+        /* التعديل تم هنا لحل مشكلة خروج المربعات */
         .form-group select, .form-group input { 
             width: 100%; 
             max-width: 100%;
             padding: 10px; 
+            margin: 0; /* يمنع إضافة هوامش عشوائية */
+            display: block; /* يجعله يلتزم بحدود الأب */
             border: 1px solid var(--input-border); 
             border-radius: 6px; 
             box-sizing: border-box; 
+            -webkit-box-sizing: border-box; /* ضروري لمتصفح سفاري */
             background-color: var(--input-bg); 
             color: var(--text-color);
             font-family: inherit;

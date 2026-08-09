@@ -206,9 +206,10 @@
                     <label style="font-size: 11px; color: #7f8c8d;">الرصيد الأساسي:</label>
                     <input type="number" id="manualMainBalance" placeholder="مثال: 36">
                 </div>
+                <!-- التعديل هنا: إضافة الحد الأقصى 10 -->
                 <div class="form-group" style="flex: 1; margin-bottom: 0;">
                     <label style="font-size: 11px; color: #7f8c8d;">الأيام المتفرقة:</label>
-                    <input type="number" id="manualScatBalance" placeholder="مثال: 10">
+                    <input type="number" id="manualScatBalance" max="10" placeholder="الحد الأقصى 10">
                 </div>
             </div>
         </div>
@@ -520,7 +521,6 @@
         form.style.display = form.style.display === 'block' ? 'none' : 'block';
     }
 
-    // دالة toggleSettings المحدثة
     window.toggleSettings = function() {
         const setForm = document.getElementById('settingsForm');
         setForm.style.display = setForm.style.display === 'block' ? 'none' : 'block';
@@ -532,7 +532,7 @@
         document.getElementById('manualScatBalance').value = scatBalance;
     }
 
-    // دالة saveSettings الشاملة المحدثة
+    // التعديل هنا: الدالة المحدثة مع شرط الحد الأقصى 10 أيام
     window.saveSettings = async function() {
         const d = document.getElementById('renewDay').value;
         const m = document.getElementById('renewMonth').value;
@@ -541,7 +541,16 @@
         
         // تحديث الأرصدة يدوياً إذا أدخلها المستخدم
         if (newMain !== '') mainBalance = Number(newMain);
-        if (newScat !== '') scatBalance = Number(newScat);
+        
+        if (newScat !== '') {
+            let inputScat = Number(newScat);
+            // التحقق من أن الأيام المتفرقة لا تتجاوز 10
+            if (inputScat > 10) {
+                alert("تنبيه: لا يمكن أن يتجاوز رصيد الأيام المتفرقة 10 أيام. تم ضبطه تلقائياً على الحد الأقصى (10).");
+                inputScat = 10;
+            }
+            scatBalance = inputScat;
+        }
 
         // تحديث تاريخ التجديد
         if (d && m) {
@@ -558,7 +567,13 @@
         // حفظ البيانات في السحاب وتحديث الشاشة
         await saveDataToCloud();
         updateUI();
-        alert("تم حفظ التعديلات بنجاح!");
+        
+        if (newScat !== '' && Number(newScat) <= 10) {
+            alert("تم حفظ التعديلات بنجاح!");
+        } else if (newScat === '') {
+            alert("تم حفظ التعديلات بنجاح!");
+        }
+        
         toggleSettings();
         checkRenewals(); 
     }

@@ -445,6 +445,18 @@ async function loadDataFromCloud() {
 
         if (docSnap.exists()) {
             const data = docSnap.data();
+            
+            // --- الكود الجديد لاسترجاع الشفت الأخير وتطبيقه ---
+            if (data.lastShift) {
+                document.getElementById('shiftSelect').value = data.lastShift;
+                if (data.lastShift === 'custom') {
+                    if (data.lastCustomStart) document.getElementById('customStart').value = data.lastCustomStart;
+                    if (data.lastCustomEnd) document.getElementById('customEnd').value = data.lastCustomEnd;
+                }
+                toggleCustomShift(); // تحديث الواجهة لإظهار أو إخفاء حقول الشفت المخصص
+            }
+            // -------------------------------------------------
+
             if (data.savedMonth === currentMonth) {
                 remainingTotalMins = (data.remainingTotalMins !== undefined) ? Number(data.remainingTotalMins) : 1320;
                 remainingDelayMins = (data.remainingDelayMins !== undefined) ? Number(data.remainingDelayMins) : 480;
@@ -479,11 +491,20 @@ async function saveDataToCloud() {
         const now = new Date();
         const currentMonth = now.getMonth();
         const docRef = window.doc(window.db, "permitsData", currentUsername);
+        
+        // جلب الشفت الحالي والأوقات المخصصة إذا وجدت
+        const currentShift = document.getElementById('shiftSelect').value;
+        const customStart = document.getElementById('customStart').value;
+        const customEnd = document.getElementById('customEnd').value;
+
         await window.setDoc(docRef, {
             savedMonth: currentMonth,
             remainingTotalMins: Number(remainingTotalMins),
             remainingDelayMins: Number(remainingDelayMins),
-            permitsList: permitsList
+            permitsList: permitsList,
+            lastShift: currentShift, // حفظ الشفت في السحابة
+            lastCustomStart: customStart,
+            lastCustomEnd: customEnd
         }, { merge: true });
     } catch (e) {
         console.error("خطأ في الحفظ:", e);

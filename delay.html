@@ -460,8 +460,15 @@ window.addDelay = async function() {
         return;
     }
 
+    // 1. التحقق من رصيد التأخير المتبقي
     if (delayMins > remainingDelayMins) {
         alert(`❌ ساعات التأخير المتبقية لا تكفي!\nرصيدك المتبقي للتأخير هو ${formatMinutesToReadable(remainingDelayMins)} فقط.`);
+        return;
+    }
+
+    // 2. التحقق من رصيد التصاريح العام المتبقي
+    if (delayMins > remainingTotalMins) {
+        alert(`❌ رصيد التصاريح العام لا يكفي!\nرصيدك العام المتبقي هو ${formatMinutesToReadable(remainingTotalMins)} فقط.`);
         return;
     }
 
@@ -500,7 +507,16 @@ window.editDelay = async function(index) {
     if (newTotalMins <= 0) return alert('وقت الحضور غير صالح (لا يوجد تأخير)');
 
     const diffMins = newTotalMins - oldMins;
-    if (diffMins > remainingDelayMins) return alert('رصيد التأخير المتبقي لا يكفي لهذا التعديل!');
+    
+    // 1. التحقق من رصيد التأخير
+    if (diffMins > remainingDelayMins) {
+        return alert('رصيد التأخير المتبقي لا يكفي لهذا التعديل!');
+    }
+    
+    // 2. التحقق من رصيد التصاريح العام
+    if (diffMins > remainingTotalMins) {
+        return alert('رصيد التصاريح العام لا يكفي لهذا التعديل!');
+    }
 
     remainingDelayMins -= diffMins;
     remainingTotalMins -= diffMins;
